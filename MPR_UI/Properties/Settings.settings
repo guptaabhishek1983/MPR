@@ -1,0 +1,18 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MPR_UI.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="DICOM_DIR" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\DicomDataSet\Phenix</Value>
+    </Setting>
+    <Setting Name="AxialColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">Tomato</Value>
+    </Setting>
+    <Setting Name="CoronalColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">BlueViolet</Value>
+    </Setting>
+    <Setting Name="SagittalColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">Gold</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
