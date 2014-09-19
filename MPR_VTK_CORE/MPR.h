@@ -30,7 +30,8 @@ namespace RTViewer
 		string GetOrientationMarkerRight(Axis axis);
 		string GetOrientationMarkerTop(Axis axis);
 		string GetOrientationMarkerBottom(Axis axis);
-		
+		double GetPixelSpacing(int axis);
+		long int GetPixelIntensity(Axis axis, int x_pos, int y_pos);
 	private:
 		MPRData* d;
 	};

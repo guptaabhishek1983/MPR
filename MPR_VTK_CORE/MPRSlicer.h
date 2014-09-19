@@ -39,7 +39,15 @@ namespace RTViewer
 			string GetOrientationMarkers_R(){ return this->m_orientatationMarkers_R; }
 			string GetOrientationMarkers_T(){ return this->m_orientatationMarkers_T; }
 			string GetOrientationMarkers_B(){ return this->m_orientatationMarkers_B; }
-
+			long int GetPixelIntensity(int x_pos, int y_pos);
+			vtkSmartPointer<vtkImageData> GetRawOutputImage();
+			void SetVOI_LUTParameters(double ww, double wl, double rs, double ri)
+			{
+				this->m_ww = ww;
+				this->m_wl = wl;
+				this->m_rs = rs;
+				this->m_ri = ri;
+			}
 	protected: // methods
 		void ComputeOrientationMarkers();
 
@@ -60,6 +68,10 @@ namespace RTViewer
 			double m_origin[3];
 			void* displayData;
 			image displayImage;
+			double m_ww;
+			double m_wl;
+			double m_rs;
+			double m_ri;
 		friend class MPR;
 	};
 }

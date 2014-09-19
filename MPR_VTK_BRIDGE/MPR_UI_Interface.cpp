@@ -27,7 +27,7 @@ MPR_UI_Interface::MPR_UI_Interface()
 		File::Delete("C:\\Temp\\MPR_View.log");
 	}
 	rad_setLogFileName("C:\\Temp\\MPR_View.log");
-	rad_setLogLevel(255);
+	rad_setLogLevel(7);
 }
 
 MPR_UI_Interface^ MPR_UI_Interface::GetHandle()
@@ -160,6 +160,18 @@ String^ MPR_UI_Interface::GetOrientationMarkerTop(int axis)
 String^ MPR_UI_Interface::GetOrientationMarkerBottom(int axis)
 {
 	return convert_to_managed_string(this->m_mpr->GetOrientationMarkerBottom((Axis)axis));
+}
+
+
+double MPR_UI_Interface::GetPixelSpacing(int p_axis)
+{
+	return this->m_mpr->GetPixelSpacing(p_axis);
+}
+
+long int MPR_UI_Interface::GetPixelIntensity(int axis, int x_pos, int y_pos)
+{
+	long value = this->m_mpr->GetPixelIntensity((Axis)axis, x_pos, y_pos);
+	return value;
 }
 
 

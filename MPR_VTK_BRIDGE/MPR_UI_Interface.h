@@ -31,7 +31,8 @@ namespace MPR_VTK_BRIDGE {
 		String^ GetOrientationMarkerRight(int axis);
 		String^ GetOrientationMarkerTop(int axis);
 		String^ GetOrientationMarkerBottom(int axis);
-
+		double GetPixelSpacing(int axis);
+		long int GetPixelIntensity(int axis, int x_pos, int y_pos);
 	public: //delegates
 		delegate void CursorTranslationCompleted();
 		delegate void UpdateImage(BitmapWrapper^ bmpWrapper, int axis, double reslicerPositionX, double reslicerPositionY);

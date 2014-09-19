@@ -34,6 +34,7 @@ namespace MPR_UI
         Point objectLocation;
         bool objectSelected;
 
+        
         public ImagePanel2()
         {
             InitializeComponent();
@@ -256,6 +257,10 @@ namespace MPR_UI
                 _sb.Append("Slicer idx#");
                 _sb.Append(imgControl.Index);
                 e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(10, 40));
+
+                _sb.Clear();
+                _sb.Append("X: ").Append(lastMousePosition.X).Append(" Y:").Append(lastMousePosition.Y);
+                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(10, 50));
             }
 
             if (cursorPosition != null)
@@ -269,11 +274,11 @@ namespace MPR_UI
             // paint cursor
             if (this.m_mprCursor.l1 != null)
             {
-               // e.Graphics.DrawLine(this.m_mprCursor.l1.DisplayPen,                    this.m_mprCursor.l1.P1.X, this.m_mprCursor.l1.P1.Y, this.m_mprCursor.l1.P2.X, this.m_mprCursor.l1.P2.Y);
+                e.Graphics.DrawLine(this.m_mprCursor.l1.DisplayPen,                    this.m_mprCursor.l1.P1.X, this.m_mprCursor.l1.P1.Y, this.m_mprCursor.l1.P2.X, this.m_mprCursor.l1.P2.Y);
             }
             if (this.m_mprCursor.l2 != null)
             {
-               // e.Graphics.DrawLine(this.m_mprCursor.l2.DisplayPen,                    this.m_mprCursor.l2.P1.X, this.m_mprCursor.l2.P1.Y, this.m_mprCursor.l2.P2.X, this.m_mprCursor.l2.P2.Y);
+                e.Graphics.DrawLine(this.m_mprCursor.l2.DisplayPen,                    this.m_mprCursor.l2.P1.X, this.m_mprCursor.l2.P1.Y, this.m_mprCursor.l2.P2.X, this.m_mprCursor.l2.P2.Y);
             }
 
             // paint side marker
@@ -308,7 +313,7 @@ namespace MPR_UI
 
             PointF p1 = GetActualDisplayPosition(p);
             //p1 = new PointF((float)(this.currentZoomFactor * (p1.X + this.currentDisplayOffsetPt.X)), 
-             //               (float)(this.currentZoomFactor * (p1.Y + this.currentDisplayOffsetPt.Y)));
+            //               (float)(this.currentZoomFactor * (p1.Y + this.currentDisplayOffsetPt.Y)));
             this.m_mprCursor.l1.P1 = new PointF(p1.X, imageRect.Top);
             this.m_mprCursor.l1.P2 = new PointF(p1.X, imageRect.Bottom);
             this.m_mprCursor.l1.Axis = axis;
@@ -335,6 +340,10 @@ namespace MPR_UI
 
         public PointF GetActualDisplayPosition(PointF point)
         {
+            
+            point.X = (int)(point.X / UI_XPixelSpacing);
+            point.X = (int)(point.X / UI_YPixelSpacing);
+
             PointF p = this.m_coordinateMapping.GetActualDisplayPosition(point);
             p = new PointF((float)(this.currentZoomFactor * (p.X + this.currentDisplayOffsetPt.X)), 
                 (float)(this.currentZoomFactor * (p.Y + this.currentDisplayOffsetPt.Y)));
@@ -343,8 +352,8 @@ namespace MPR_UI
 
         public Point GetOriginalCoords(Point p)
         {
-            Point ret = new Point((int)((p.X / currentZoomFactor) - currentDisplayOffsetPt.X),
-                (int)((p.Y / currentZoomFactor) - currentDisplayOffsetPt.Y));
+            Point ret = new Point((int)(((p.X / currentZoomFactor) - currentDisplayOffsetPt.X)*UI_XPixelSpacing),
+                (int)(((p.Y / currentZoomFactor) - currentDisplayOffsetPt.Y) * UI_YPixelSpacing));
             return this.m_coordinateMapping.GetActualPosition(ret);
         }
 
@@ -353,5 +362,9 @@ namespace MPR_UI
         public double XPixelSpacing { get; set; }
 
         public double YPixelSpacing { get; set; }
+
+        public double UI_XPixelSpacing { get; set; }
+
+        public double UI_YPixelSpacing { get; set; }
     }
 }

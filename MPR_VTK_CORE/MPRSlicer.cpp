@@ -311,6 +311,8 @@ image MPRSlicer::GetOutputImage()
 	this->m_reslice->SetInterpolationModeToCubic();
 	this->m_reslice->Update();
 
+	int inDim[3] = { 0, 0, 0 };
+	this->m_inputImage->GetDimensions(inDim);
 	this->m_outputImage = this->m_reslice->GetOutput();
 	if (this->m_axis == SagittalAxis)
 	{
@@ -359,10 +361,10 @@ image MPRSlicer::GetOutputImage()
 		this->displayData = rad_get_memory(displayImage.height*displayImage.width*rad_sizeof(displayImage.type));
 		displayImage.data = this->displayData;
 
-		voi_lut_transform_image_fast(displayImage,in_dcm, 1274, 682,
+		voi_lut_transform_image_fast(displayImage,in_dcm, this->m_ww, this->m_wl,
 			0, 255,
-			1.0,
-			0.0);
+			this->m_rs,
+			this->m_ri);
 
 	}
 
@@ -543,4 +545,91 @@ void MPRSlicer::ComputeOrientationMarkers()
 	this->m_orientatationMarkers_R = GetOtherOrientation(this->m_orientatationMarkers_L);
 	this->m_orientatationMarkers_B = CalucateOrientation(y[0], y[1], y[2]);
 	this->m_orientatationMarkers_T = GetOtherOrientation(this->m_orientatationMarkers_B);
+}
+
+vtkSmartPointer<vtkImageData> MPRSlicer::GetRawOutputImage()
+{
+	switch (this->m_axis)
+	{
+		case AxialAxis:
+		{
+			m_resliceMatrix->SetElement(0, 3, 0);
+			m_resliceMatrix->SetElement(1, 3, 0);
+			m_resliceMatrix->SetElement(2, 3, m_position);
+		}
+			break;
+
+		case CoronalAxis:
+		{
+			m_resliceMatrix->SetElement(0, 3, 0);
+			m_resliceMatrix->SetElement(1, 3, m_position);
+			m_resliceMatrix->SetElement(2, 3, 0);
+		}
+			break;
+
+		case SagittalAxis:
+		{
+			m_resliceMatrix->SetElement(0, 3, m_position);
+			m_resliceMatrix->SetElement(1, 3, 0);
+			m_resliceMatrix->SetElement(2, 3, 0);
+		}
+			break;
+	}
+
+	this->m_reslice->SetResliceAxes(m_resliceMatrix);
+	this->m_reslice->SetInputData(this->m_inputImage);
+	this->m_reslice->SetOutputDimensionality(2);
+	this->m_reslice->SetInterpolationModeToCubic();
+	this->m_reslice->Update();
+
+	this->m_outputImage = this->m_reslice->GetOutput();
+	return this->m_outputImage;
+}
+
+long int MPRSlicer::GetPixelIntensity(int x_pos, int y_pos)
+{
+	long int value = 0;
+	int dim[3] = { 0, 0, 0 };
+	this->GetRawOutputImage()->GetDimensions(dim);
+
+	int dataType = this->GetRawOutputImage()->GetScalarType();
+	switch (dataType)
+	{
+		case VTK_UNSIGNED_CHAR:
+		{
+			unsigned char* pixelData = (unsigned char*)this->GetRawOutputImage()->GetScalarPointer();
+			value = pixelData[y_pos*dim[1] + x_pos];
+		}
+			break;
+
+		case VTK_UNSIGNED_INT:
+		{
+			unsigned int* pixelData = (unsigned int*)this->GetRawOutputImage()->GetScalarPointer();
+			value = pixelData[y_pos*dim[1] + x_pos];
+		}
+			break;
+		case VTK_UNSIGNED_SHORT:
+		{
+			unsigned short* pixelData = (unsigned short*)this->GetRawOutputImage()->GetScalarPointer();
+			value = pixelData[y_pos*dim[1] + x_pos];
+		}
+			break;
+		case VTK_SHORT:
+		{
+			short* pixelData = (short*)this->GetRawOutputImage()->GetScalarPointer();
+			value = pixelData[y_pos*dim[1] + x_pos];
+		}
+			break;
+		default:
+		{
+			RAD_LOG_CRITICAL("Unknown data type:" << dataType);
+		}
+			break;
+	}
+
+	/*signed short int* pixelData = (signed short int*)this->GetRawOutputImage()->GetScalarPointer();
+	value = pixelData[y_pos*dim[1] + x_pos];*/
+	/* Applying the rescale slope & rescale intercept */
+	value = (long int)(((double)value*this->m_rs) + this->m_ri);
+	return (value);
 }

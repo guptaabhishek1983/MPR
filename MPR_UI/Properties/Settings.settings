@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="DICOM_DIR" Type="System.String" Scope="User">
-      <Value Profile="(Default)">D:\DicomDataSet\Phenix</Value>
+      <Value Profile="(Default)">D:\Medsphere\StreamingData-RT\2.16.840.1.113662.2.12.0.3057.1241703565.35\2.16.840.1.113662.2.12.0.3057.1241703565.43</Value>
     </Setting>
     <Setting Name="AxialColor" Type="System.Drawing.Color" Scope="User">
       <Value Profile="(Default)">Tomato</Value>
