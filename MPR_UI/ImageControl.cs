@@ -69,7 +69,7 @@ namespace MPR_UI
 
             // Init scroll bar event
             this.scrollBar.ValueChanged += scrollBar_ValueChanged;
-
+            
             
             // ORIENTATION MARKERS
             OrientationMarkerLeft = m_UIInterface.GetOrientationMarkerLeft((int)this.m_axis);
@@ -77,6 +77,42 @@ namespace MPR_UI
             OrientationMarkerTop = m_UIInterface.GetOrientationMarkerTop((int)this.m_axis);
             OrientationMarkerBottom = m_UIInterface.GetOrientationMarkerBottom((int)this.m_axis);
             LoadImage();
+
+
+            this.m_imagePanel.UI_XPixelSpacing = 1.0;
+            this.m_imagePanel.UI_YPixelSpacing = 1.0;
+
+            //double ASpacing = Math.Abs(m_UIInterface.GetPixelSpacing((int)Axis.AxialAxis));
+            //double CSpacing = Math.Abs(m_UIInterface.GetPixelSpacing((int)Axis.CoronalAxis));
+            //double SSpacing = Math.Abs(m_UIInterface.GetPixelSpacing((int)Axis.SagittalAxis));
+            
+            //double noOfAImages = m_UIInterface.GetNumberOfImages((int)Axis.AxialAxis);
+            //double noOfCImages = m_UIInterface.GetNumberOfImages((int)Axis.CoronalAxis);
+            //double noOfSImages = m_UIInterface.GetNumberOfImages((int)Axis.SagittalAxis);
+
+
+            //switch(this.m_axis)
+            //{
+            //    case Axis.AxialAxis:
+            //        {
+            //            this.m_imagePanel.UI_XPixelSpacing = SSpacing * (noOfSImages / m_imagePanel.StoreBitmap.Width);
+            //            this.m_imagePanel.UI_YPixelSpacing = CSpacing * (noOfCImages / m_imagePanel.StoreBitmap.Height);
+            //        }
+            //        break;
+            //    case Axis.CoronalAxis:
+            //        {
+            //            this.m_imagePanel.UI_XPixelSpacing = SSpacing * (noOfSImages / m_imagePanel.StoreBitmap.Width);
+            //            this.m_imagePanel.UI_YPixelSpacing = ASpacing * (noOfAImages / m_imagePanel.StoreBitmap.Height);
+            //        }
+            //        break;
+            //    case Axis.SagittalAxis:
+            //        {
+            //            this.m_imagePanel.UI_XPixelSpacing = CSpacing * (noOfCImages / m_imagePanel.StoreBitmap.Width);
+            //            this.m_imagePanel.UI_YPixelSpacing = ASpacing * (noOfAImages / m_imagePanel.StoreBitmap.Height);
+            //        }
+            //        break;
+            //}
+            UpdateCursorPosition();
             
         }
 
@@ -140,7 +176,7 @@ namespace MPR_UI
             //if (Index != scrollBar.Value)
             //    MessageBox.Show("Alert");
             this.m_imagePanel.StoreBitmap = bmpWrapper.StoredBitmap;
-            UpdateCursorPosition();
+            
             this.Invalidate();
             
         }
