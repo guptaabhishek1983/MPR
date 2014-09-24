@@ -20,6 +20,8 @@ namespace MPR_UI
         public delegate void RaisePixelIntensity(Point p);
         public event RaisePixelIntensity EVT_RaisePixelIntensity;
 
+        public delegate void RaiseSlicerRotated(int angle);
+        public event RaiseSlicerRotated EVT_RaiseSlicerRotated;
         private Bitmap m_storedBitmap;
         private struct MPRCursor
         {
@@ -31,6 +33,8 @@ namespace MPR_UI
         private CoordinateMapping m_coordinateMapping;
         private PointF cursorPosition;
         private GraphicsPath cursorPath;
+        private GraphicsPath XAxisLine;
+        private GraphicsPath YAxisLine;
         private Point lastMousePosition;
         private Point lastMousePositionORG;
         // testing
@@ -57,6 +61,13 @@ namespace MPR_UI
             // cursor path
             cursorPath = new GraphicsPath();
             cursorPath.Reset();
+
+            XAxisLine = new GraphicsPath();
+            XAxisLine.Reset();
+
+            YAxisLine = new GraphicsPath();
+            YAxisLine.Reset();
+
 
             // testing
             objectPath = new GraphicsPath();
@@ -174,7 +185,36 @@ namespace MPR_UI
                     MPRCursorSelected = false;
                 }
             }
-            
+
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                if (XAxisLine.GetBounds().Contains(e.Location))
+                {
+                    MPRAxisSelected = true;
+                }
+
+                if (YAxisLine.GetBounds().Contains(e.Location))
+                {
+                    MPRAxisSelected = true;
+                }
+            }
+
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                this.m_mprCursor.l1.P1 = this.m_coordinateMapping.RotatePoint(this.m_mprCursor.l1.P1, this.cursorPosition, 10);
+
+                this.m_mprCursor.l1.P2 = this.m_coordinateMapping.RotatePoint(this.m_mprCursor.l1.P2, this.cursorPosition, 10);
+
+                this.m_mprCursor.l2.P1 = this.m_coordinateMapping.RotatePoint(this.m_mprCursor.l2.P1, this.cursorPosition, 10);
+
+                this.m_mprCursor.l2.P2 = this.m_coordinateMapping.RotatePoint(this.m_mprCursor.l2.P2, this.cursorPosition, 10);
+
+                if(EVT_RaiseSlicerRotated!=null)
+                {
+                    EVT_RaiseSlicerRotated(10);
+                }
+
+            }
             // update last mouse position
             this.lastMousePositionORG = new Point(e.X, e.Y) ;
             this.lastMousePosition = this.GetOriginalCoords(e.Location);
@@ -198,6 +238,8 @@ namespace MPR_UI
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+            
+            
             Point p = this.GetOriginalCoords(new Point(e.X, e.Y));
             if (e.Button == System.Windows.Forms.MouseButtons.Left && MPRCursorSelected == true) 
             {
@@ -205,6 +247,8 @@ namespace MPR_UI
                 //Point pDiff = new Point(e.X - lastMousePositionORG.X, e.Y - lastMousePositionORG.Y);
                 EVT_MPRCursorTranslated(new Point((int)(p.X*XPixelSpacing), (int)(p.Y*YPixelSpacing)));
             }
+
+            
 
             if(EVT_RaisePixelIntensity!=null)
             {
@@ -308,17 +352,25 @@ namespace MPR_UI
                 cursorPath.Reset();
                 cursorPath.AddEllipse(cursorPosition.X - 5.0F, cursorPosition.Y - 5.0F, 10.0F, 10.0F);
                 cursorPath.CloseFigure();
-               // e.Graphics.FillPath(p.Brush, cursorPath);
+                e.Graphics.FillPath(p.Brush, cursorPath);
             }
             
             // paint cursor
-            if (this.m_mprCursor.l1 != null)
+            if (this.m_mprCursor.l1 != null && XAxisLine!=null)
             {
-                e.Graphics.DrawLine(this.m_mprCursor.l1.DisplayPen,                    this.m_mprCursor.l1.P1.X, this.m_mprCursor.l1.P1.Y, this.m_mprCursor.l1.P2.X, this.m_mprCursor.l1.P2.Y);
+                XAxisLine.Reset();
+                XAxisLine.AddLine(this.m_mprCursor.l1.P1, this.m_mprCursor.l1.P2);
+                XAxisLine.CloseFigure();
+                e.Graphics.DrawPath(this.m_mprCursor.l1.DisplayPen, XAxisLine);
+                //e.Graphics.DrawLine(this.m_mprCursor.l1.DisplayPen,                    this.m_mprCursor.l1.P1.X, this.m_mprCursor.l1.P1.Y, this.m_mprCursor.l1.P2.X, this.m_mprCursor.l1.P2.Y);
             }
-            if (this.m_mprCursor.l2 != null)
+            if (this.m_mprCursor.l2 != null && YAxisLine != null)
             {
-                e.Graphics.DrawLine(this.m_mprCursor.l2.DisplayPen,                    this.m_mprCursor.l2.P1.X, this.m_mprCursor.l2.P1.Y, this.m_mprCursor.l2.P2.X, this.m_mprCursor.l2.P2.Y);
+                YAxisLine.Reset();
+                YAxisLine.AddLine(this.m_mprCursor.l2.P1, this.m_mprCursor.l2.P2);
+                YAxisLine.CloseFigure();
+                e.Graphics.DrawPath(this.m_mprCursor.l2.DisplayPen, YAxisLine);
+                //e.Graphics.DrawLine(this.m_mprCursor.l2.DisplayPen,                    this.m_mprCursor.l2.P1.X, this.m_mprCursor.l2.P1.Y, this.m_mprCursor.l2.P2.X, this.m_mprCursor.l2.P2.Y);
             }
 
             // paint side marker
@@ -402,5 +454,11 @@ namespace MPR_UI
         public double YPixelSpacing { get; set; }
 
         public int PixelIntensity { get; set; }
+
+        public bool MPRAxisSelected { get; set; }
+
+        public bool MPRXAxisSelected { get; set; }
+
+        public bool MPRYAxisSelected { get; set; }
     }
 }

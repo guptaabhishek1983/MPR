@@ -34,6 +34,9 @@ namespace RTViewer
 
 		double GetPixelSpacing(int axis);
 		long int GetPixelIntensity(Axis axis, int x_pos, int y_pos);
+
+		void RotateAxesAlongPlane(int axis, int angle);
+
 	private:
 		MPRData* d;
 	};

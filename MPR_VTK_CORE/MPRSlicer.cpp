@@ -35,7 +35,7 @@ MPRSlicer::MPRSlicer(Axis axis)
 
 MPRSlicer::~MPRSlicer(void)
 {
-	this->m_resliceMatrix->Delete();
+	this->m_transform->Delete();
 	this->m_reslice->Delete();
 }
 
@@ -191,10 +191,11 @@ void MPRSlicer::InitSlicer(vtkSmartPointer<vtkMatrix4x4> p_orientationMatrix)
 	this->m_reslice = vtkSmartPointer<vtkImageReslice>::New();
 
 	this->m_resliceMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
+	this->m_resliceMatrix->Identity();
 
 	this->m_transform = vtkSmartPointer<vtkTransform>::New();
 	this->m_transform->Identity();
-	this->m_transform->GetMatrix(this->m_resliceMatrix);
+	
 
 	vtkSmartPointer<vtkMatrix4x4> planeMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
 	switch (this->m_axis)
@@ -204,9 +205,7 @@ void MPRSlicer::InitSlicer(vtkSmartPointer<vtkMatrix4x4> p_orientationMatrix)
 			
 			planeMatrix->DeepCopy(axialElements);
 			vtkMatrix4x4::Multiply4x4(p_orientationMatrix, planeMatrix, m_resliceMatrix);
-			RAD_LOG_CRITICAL("******* AXIAL **********");
-			m_resliceMatrix->Print(cerr);
-			RAD_LOG_CRITICAL("*****************");
+			
 			/*this->m_transform->RotateZ(90);
 			ReorientSliceToStdOrientation(this->m_transform, p_orientationMatrix);
 			this->m_resliceMatrix->DeepCopy(this->m_transform->GetMatrix());*/
@@ -221,9 +220,7 @@ void MPRSlicer::InitSlicer(vtkSmartPointer<vtkMatrix4x4> p_orientationMatrix)
 		{
 			planeMatrix->DeepCopy(sagittalElements);
 			vtkMatrix4x4::Multiply4x4(p_orientationMatrix, planeMatrix, m_resliceMatrix);
-			RAD_LOG_CRITICAL("******* SAGITTAL **********");
-			m_resliceMatrix->Print(cerr);
-				RAD_LOG_CRITICAL("*****************");
+			
 
 
 			//this->m_transform->RotateY(90);
@@ -245,9 +242,7 @@ void MPRSlicer::InitSlicer(vtkSmartPointer<vtkMatrix4x4> p_orientationMatrix)
 		{
 			planeMatrix->DeepCopy(coronalElements);
 			vtkMatrix4x4::Multiply4x4(p_orientationMatrix, planeMatrix, m_resliceMatrix);
-			RAD_LOG_CRITICAL("******* CORONAL **********");
-			m_resliceMatrix->Print(cerr);
-				RAD_LOG_CRITICAL("*****************");
+			
 
 			/*this->m_transform->RotateX(90);
 			ReorientSliceToStdOrientation(this->m_transform, p_orientationMatrix);
@@ -263,8 +258,7 @@ void MPRSlicer::InitSlicer(vtkSmartPointer<vtkMatrix4x4> p_orientationMatrix)
 		}
 			break;
 	}
-
-
+	
 	this->m_reslice->SetResliceAxes(this->m_resliceMatrix);
 	this->m_reslice->InterpolateOff();
 	this->m_reslice->SetOutputDimensionality(2);
@@ -290,9 +284,9 @@ void MPRSlicer::InitSlicer(vtkSmartPointer<vtkMatrix4x4> p_orientationMatrix)
 }
 void MPRSlicer::SetReslicePosition(double point[3])
 {
-	this->m_reslice->GetResliceAxes()->SetElement(0,3,point[0]);
-	this->m_reslice->GetResliceAxes()->SetElement(1,3,point[1]);
-	this->m_reslice->GetResliceAxes()->SetElement(2,3,point[2]);
+	this->m_resliceMatrix->SetElement(0, 3, point[0]);
+	this->m_resliceMatrix->SetElement(1, 3, point[1]);
+	this->m_resliceMatrix->SetElement(2, 3, point[2]);
 	this->m_resliceMatrix->Modified();
 }
 
@@ -324,11 +318,10 @@ image MPRSlicer::GetOutputImage()
 			}
 			break;
 	}
-
-	this->m_reslice->SetResliceAxes(m_resliceMatrix);
+	this->m_reslice->SetResliceAxes(this->m_resliceMatrix);
 	this->m_reslice->SetInputData(this->m_inputImage);
 	this->m_reslice->SetOutputDimensionality(2); 
-	//this->m_reslice->SetOutputSpacing(0.423828, 0.423828, 0.700012);
+	
 	this->m_reslice->SetInterpolationModeToCubic();
 	this->m_reslice->Update();
 
@@ -670,4 +663,35 @@ long int MPRSlicer::GetPixelIntensity(int x_pos, int y_pos)
 	/* Applying the rescale slope & rescale intercept */
 	value = (long int)(((double)value*this->m_rs) + this->m_ri);
 	return (value);
+}
+
+void MPRSlicer::RotateX(int angle)
+{
+	this->m_transform->SetMatrix(this->m_resliceMatrix);
+	RAD_LOG_CRITICAL("------------------------");
+	this->m_transform->Print(cerr);
+
+	this->m_transform->RotateX(angle);
+	this->m_transform->Update();
+	this->m_transform->GetMatrix(this->m_resliceMatrix);
+}
+
+void MPRSlicer::RotateY(int angle)
+{
+	this->m_transform->SetMatrix(this->m_resliceMatrix);
+	RAD_LOG_CRITICAL("------------------------");
+	this->m_transform->Print(cerr);
+	this->m_transform->RotateY(angle);
+	this->m_transform->Update();
+	this->m_transform->GetMatrix(this->m_resliceMatrix);
+}
+
+void MPRSlicer::RotateZ(int angle)
+{
+	this->m_transform->SetMatrix(this->m_resliceMatrix);
+	RAD_LOG_CRITICAL("------------------------");
+	this->m_transform->Print(cerr);
+	this->m_transform->RotateZ(angle);
+	this->m_transform->Update();
+	this->m_transform->GetMatrix(this->m_resliceMatrix);
 }

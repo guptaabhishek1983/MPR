@@ -48,6 +48,10 @@ namespace RTViewer
 				this->m_rs = rs;
 				this->m_ri = ri;
 			}
+
+			void RotateX(int angle);
+			void RotateY(int angle);
+			void RotateZ(int angle);
 	protected: // methods
 		void ComputeOrientationMarkers();
 

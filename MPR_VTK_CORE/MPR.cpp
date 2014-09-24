@@ -691,3 +691,27 @@ long int MPR::GetPixelIntensity(Axis axis, int x_pos, int y_pos)
 	}
 	return 0;
 }
+
+void MPR::RotateAxesAlongPlane(int axis, int angle)
+{
+	switch (axis)
+	{	
+		case AxialAxis:
+		{
+			d->m_slicers[SagittalAxis]->RotateY(angle*-1);
+			//d->m_slicers[CoronalAxis]->RotateY(angle*-1);
+		}
+			break;
+		case CoronalAxis:
+			break;
+		case SagittalAxis:
+		{
+			d->m_slicers[AxialAxis]->RotateY(angle*-1);
+			d->m_slicers[CoronalAxis]->RotateX(angle*-1);
+		}
+			break;
+
+		default:
+			break;
+	}
+}

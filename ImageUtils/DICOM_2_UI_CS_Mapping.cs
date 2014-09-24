@@ -59,5 +59,31 @@ namespace ImageUtils
             return new PointF((float)ret.GetElement(0, 0), (float)ret.GetElement(1, 0));
         }
 
+        public Point RotatePoint(Point pointToRotate, Point centerPoint, int angleInDegrees)
+        {
+            double angleInRadians = angleInDegrees * (Math.PI / 180);
+            double cosTheta = Math.Cos(angleInRadians);
+            double sinTheta = Math.Sin(angleInRadians);
+            int x = (int)
+                    (cosTheta * (pointToRotate.X - centerPoint.X) -
+                    sinTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.X);
+            int y = (int)
+                    (sinTheta * (pointToRotate.X - centerPoint.X) +
+                    cosTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.Y);
+            return new Point(x, y);
+        }
+
+        public PointF RotatePoint(PointF pointToRotate, PointF centerPoint, int angleInDegrees)
+        {
+            double angleInRadians = angleInDegrees * (Math.PI / 180);
+            double cosTheta = Math.Cos(angleInRadians);
+            double sinTheta = Math.Sin(angleInRadians);
+            float x = (float)(cosTheta * (pointToRotate.X - centerPoint.X) -
+                    sinTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.X);
+            float y = (float)
+                    (sinTheta * (pointToRotate.X - centerPoint.X) +
+                    cosTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.Y);
+            return new PointF(x, y);
+        }
     }
 }

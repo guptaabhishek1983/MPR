@@ -35,9 +35,15 @@ namespace MPR_UI
             this.m_imagePanel.Dock = DockStyle.Fill;
             this.m_imagePanel.EVT_MPRCursorTranslated += TranslateMPRCursor;
             this.m_imagePanel.EVT_RaisePixelIntensity +=RaisePixelIntensity;
+            this.m_imagePanel.EVT_RaiseSlicerRotated+=RaiseSlicerRotated;
             this.panel1.Controls.Add(this.m_imagePanel);
             m_UIInterface = MPR_UI_Interface.GetHandle();
             m_UIInterface.EVT_UpdateImage += Handle_UpdateImage;
+        }
+
+        private void RaiseSlicerRotated(int angle)
+        {
+            this.m_UIInterface.RotateAxesAlongPlane((int)this.m_axis, angle);
         }
 
         private void RaisePixelIntensity(Point p)

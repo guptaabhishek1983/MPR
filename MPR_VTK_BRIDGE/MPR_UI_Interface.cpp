@@ -180,7 +180,10 @@ long int MPR_UI_Interface::GetPixelIntensity(int axis, int x_pos, int y_pos)
 	long value = this->m_mpr->GetPixelIntensity((Axis)axis, x_pos, y_pos);
 	return value;
 }
-
+void MPR_UI_Interface::RotateAxesAlongPlane(int axis, int angle)
+{
+	this->m_mpr->RotateAxesAlongPlane(axis, angle);
+}
 
 // static methods
 void MPR_UI_Interface::WriteLog(String^ msg)
