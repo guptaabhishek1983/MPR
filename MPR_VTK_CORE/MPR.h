@@ -24,12 +24,14 @@ namespace RTViewer
 		int GetNumberOfImages(Axis axis);
 		int GetCurrentImageIndex(Axis axis);
 		double GetCurrentImagePosition(Axis axis);
-		double GetCurrentImagePositionRelativeToOrigin(Axis axis);
+		void GetCurrentSlicerPositionRelativeToIndex(Axis axis, int& xPos, int& yPos);
 		void GetOutputImageDisplayDimensions(Axis axis, int& width, int& height);
 		string GetOrientationMarkerLeft(Axis axis);
 		string GetOrientationMarkerRight(Axis axis);
 		string GetOrientationMarkerTop(Axis axis);
 		string GetOrientationMarkerBottom(Axis axis);
+		void GetXYZPixelSpacing(int axis, double* spacing);
+
 		double GetPixelSpacing(int axis);
 		long int GetPixelIntensity(Axis axis, int x_pos, int y_pos);
 	private:

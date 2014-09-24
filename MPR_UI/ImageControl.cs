@@ -34,9 +34,15 @@ namespace MPR_UI
             this.m_imagePanel = new ImagePanel2();
             this.m_imagePanel.Dock = DockStyle.Fill;
             this.m_imagePanel.EVT_MPRCursorTranslated += TranslateMPRCursor;
+            this.m_imagePanel.EVT_RaisePixelIntensity +=RaisePixelIntensity;
             this.panel1.Controls.Add(this.m_imagePanel);
             m_UIInterface = MPR_UI_Interface.GetHandle();
             m_UIInterface.EVT_UpdateImage += Handle_UpdateImage;
+        }
+
+        private void RaisePixelIntensity(Point p)
+        {
+            this.m_imagePanel.PixelIntensity = this.m_UIInterface.GetPixelIntensity((int)this.m_axis, p.X, p.Y);
         }
 
         private void Handle_UpdateImage(BitmapWrapper bmpWrapper, int axis, double reslicerPositionX, double reslicerPositionY)
@@ -78,40 +84,17 @@ namespace MPR_UI
             OrientationMarkerBottom = m_UIInterface.GetOrientationMarkerBottom((int)this.m_axis);
             LoadImage();
 
-
-            this.m_imagePanel.UI_XPixelSpacing = 1.0;
-            this.m_imagePanel.UI_YPixelSpacing = 1.0;
-
-            //double ASpacing = Math.Abs(m_UIInterface.GetPixelSpacing((int)Axis.AxialAxis));
-            //double CSpacing = Math.Abs(m_UIInterface.GetPixelSpacing((int)Axis.CoronalAxis));
-            //double SSpacing = Math.Abs(m_UIInterface.GetPixelSpacing((int)Axis.SagittalAxis));
-            
-            //double noOfAImages = m_UIInterface.GetNumberOfImages((int)Axis.AxialAxis);
-            //double noOfCImages = m_UIInterface.GetNumberOfImages((int)Axis.CoronalAxis);
-            //double noOfSImages = m_UIInterface.GetNumberOfImages((int)Axis.SagittalAxis);
-
-
-            //switch(this.m_axis)
-            //{
-            //    case Axis.AxialAxis:
-            //        {
-            //            this.m_imagePanel.UI_XPixelSpacing = SSpacing * (noOfSImages / m_imagePanel.StoreBitmap.Width);
-            //            this.m_imagePanel.UI_YPixelSpacing = CSpacing * (noOfCImages / m_imagePanel.StoreBitmap.Height);
-            //        }
-            //        break;
-            //    case Axis.CoronalAxis:
-            //        {
-            //            this.m_imagePanel.UI_XPixelSpacing = SSpacing * (noOfSImages / m_imagePanel.StoreBitmap.Width);
-            //            this.m_imagePanel.UI_YPixelSpacing = ASpacing * (noOfAImages / m_imagePanel.StoreBitmap.Height);
-            //        }
-            //        break;
-            //    case Axis.SagittalAxis:
-            //        {
-            //            this.m_imagePanel.UI_XPixelSpacing = CSpacing * (noOfCImages / m_imagePanel.StoreBitmap.Width);
-            //            this.m_imagePanel.UI_YPixelSpacing = ASpacing * (noOfAImages / m_imagePanel.StoreBitmap.Height);
-            //        }
-            //        break;
-            //}
+            // PIXEL SPACING
+            double[] _pixelSpacing = { 0,0,0};
+            unsafe
+            {
+                fixed (double* resPtr = _pixelSpacing)
+                {
+                    m_UIInterface.GetPixelSpacing((int)this.m_axis, resPtr);
+                }
+            }
+            this.m_imagePanel.XPixelSpacing = _pixelSpacing[0];
+            this.m_imagePanel.YPixelSpacing = _pixelSpacing[1];
             UpdateCursorPosition();
             
         }
@@ -134,9 +117,16 @@ namespace MPR_UI
             {
                 case Axis.AxialAxis:
                     {
-                        double PositionS = m_UIInterface.GetCurrentImagePositionRelativeToOrigin((int)Axis.SagittalAxis);
-                        double PositionC = m_UIInterface.GetCurrentImagePositionRelativeToOrigin((int)Axis.CoronalAxis);
-                        PointF cursorPoint = new PointF((float)PositionS, (float)PositionC);
+                        int[] _position = { 0,0};
+                        unsafe
+                        {
+                            fixed (int* resPtr = _position)
+                            {
+                                m_UIInterface.GetCurrentSlicerPositionRelativeToIndex((int)this.m_axis, resPtr);
+                            }
+                        }
+
+                        PointF cursorPoint = new PointF((float)_position[0], (float)_position[1]);
 
                         this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.CoronalAxis);
                         this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.SagittalAxis);
@@ -144,10 +134,16 @@ namespace MPR_UI
                     break;
                 case Axis.CoronalAxis:
                     {
-                        double PositionA = m_UIInterface.GetCurrentImagePositionRelativeToOrigin((int)Axis.AxialAxis);
-                        double PositionS = m_UIInterface.GetCurrentImagePositionRelativeToOrigin((int)Axis.SagittalAxis);
+                        int[] _position = { 0, 0 };
+                        unsafe
+                        {
+                            fixed (int* resPtr = _position)
+                            {
+                                m_UIInterface.GetCurrentSlicerPositionRelativeToIndex((int)this.m_axis, resPtr);
+                            }
+                        }
+                        PointF cursorPoint = new PointF((float)_position[0], (float)_position[1]);
 
-                        PointF cursorPoint = new PointF((float)PositionS, (float)PositionA);
                         this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.SagittalAxis);
                         this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.AxialAxis);
 
@@ -155,10 +151,15 @@ namespace MPR_UI
                     break;
                 case Axis.SagittalAxis:
                     {
-                        double PositionA = m_UIInterface.GetCurrentImagePositionRelativeToOrigin((int)Axis.AxialAxis);
-                        double PositionC = m_UIInterface.GetCurrentImagePositionRelativeToOrigin((int)Axis.CoronalAxis);
-
-                        PointF cursorPoint = new PointF((float)PositionC, (float)PositionA);
+                        int[] _position = { 0, 0 };
+                        unsafe
+                        {
+                            fixed (int* resPtr = _position)
+                            {
+                                m_UIInterface.GetCurrentSlicerPositionRelativeToIndex((int)this.m_axis, resPtr);
+                            }
+                        }
+                        PointF cursorPoint = new PointF((float)_position[0], (float)_position[1]);
                         this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.CoronalAxis);
                         this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.AxialAxis);
                     }

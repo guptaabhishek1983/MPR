@@ -378,20 +378,20 @@ namespace ImageUtils
             #endregion
         }
 
-        public void Resize(int newWidth, int newHeight)
-        {
-            Bitmap result = new Bitmap(newWidth, newHeight);
-            using (Graphics g = Graphics.FromImage(result))
-            {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                g.DrawImage(this.StoredBitmap, 0, 0, newWidth, newHeight);
-                this.bitmap = result;
-            }
-            return;
+        //public void Resize(int newWidth, int newHeight)
+        //{
+        //    Bitmap result = new Bitmap(newWidth, newHeight);
+        //    using (Graphics g = Graphics.FromImage(result))
+        //    {
+        //        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+        //        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+        //        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        //        g.DrawImage(this.StoredBitmap, 0, 0, newWidth, newHeight);
+        //        this.bitmap = result;
+        //    }
+        //    return;
 
-        }
+        //}
         #endregion
 
         public void MakeGrey()

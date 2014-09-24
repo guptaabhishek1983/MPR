@@ -196,13 +196,20 @@ void MPRSlicer::InitSlicer(vtkSmartPointer<vtkMatrix4x4> p_orientationMatrix)
 	this->m_transform->Identity();
 	this->m_transform->GetMatrix(this->m_resliceMatrix);
 
+	vtkSmartPointer<vtkMatrix4x4> planeMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
 	switch (this->m_axis)
 	{
 		case AxialAxis:
 		{
-			this->m_transform->RotateZ(90);
+			
+			planeMatrix->DeepCopy(axialElements);
+			vtkMatrix4x4::Multiply4x4(p_orientationMatrix, planeMatrix, m_resliceMatrix);
+			RAD_LOG_CRITICAL("******* AXIAL **********");
+			m_resliceMatrix->Print(cerr);
+			RAD_LOG_CRITICAL("*****************");
+			/*this->m_transform->RotateZ(90);
 			ReorientSliceToStdOrientation(this->m_transform, p_orientationMatrix);
-			this->m_resliceMatrix->DeepCopy(this->m_transform->GetMatrix());
+			this->m_resliceMatrix->DeepCopy(this->m_transform->GetMatrix());*/
 			/*this->m_resliceMatrix->DeepCopy(axialElements);
 			vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
 			transform->SetMatrix(this->m_resliceMatrix);
@@ -212,9 +219,16 @@ void MPRSlicer::InitSlicer(vtkSmartPointer<vtkMatrix4x4> p_orientationMatrix)
 			break;
 		case SagittalAxis:
 		{
-			this->m_transform->RotateY(90);
-			ReorientSliceToStdOrientation(this->m_transform, p_orientationMatrix);
-			this->m_transform->GetMatrix(this->m_resliceMatrix);
+			planeMatrix->DeepCopy(sagittalElements);
+			vtkMatrix4x4::Multiply4x4(p_orientationMatrix, planeMatrix, m_resliceMatrix);
+			RAD_LOG_CRITICAL("******* SAGITTAL **********");
+			m_resliceMatrix->Print(cerr);
+				RAD_LOG_CRITICAL("*****************");
+
+
+			//this->m_transform->RotateY(90);
+			//ReorientSliceToStdOrientation(this->m_transform, p_orientationMatrix);
+			//this->m_transform->GetMatrix(this->m_resliceMatrix);
 			
 			//this->m_resliceMatrix->DeepCopy(sagittalElements);
 			//// reorient reslice matrix to show image up-right and in correct orientation
@@ -229,9 +243,15 @@ void MPRSlicer::InitSlicer(vtkSmartPointer<vtkMatrix4x4> p_orientationMatrix)
 			break;
 		case CoronalAxis:
 		{
-			this->m_transform->RotateX(90);
+			planeMatrix->DeepCopy(coronalElements);
+			vtkMatrix4x4::Multiply4x4(p_orientationMatrix, planeMatrix, m_resliceMatrix);
+			RAD_LOG_CRITICAL("******* CORONAL **********");
+			m_resliceMatrix->Print(cerr);
+				RAD_LOG_CRITICAL("*****************");
+
+			/*this->m_transform->RotateX(90);
 			ReorientSliceToStdOrientation(this->m_transform, p_orientationMatrix);
-			this->m_resliceMatrix->DeepCopy(this->m_transform->GetMatrix());
+			this->m_resliceMatrix->DeepCopy(this->m_transform->GetMatrix());*/
 			//this->m_resliceMatrix->DeepCopy(coronalElements);
 			//// reorient reslice matrix to show image up-right and in correct orientation
 			//vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
@@ -308,11 +328,13 @@ image MPRSlicer::GetOutputImage()
 	this->m_reslice->SetResliceAxes(m_resliceMatrix);
 	this->m_reslice->SetInputData(this->m_inputImage);
 	this->m_reslice->SetOutputDimensionality(2); 
+	//this->m_reslice->SetOutputSpacing(0.423828, 0.423828, 0.700012);
 	this->m_reslice->SetInterpolationModeToCubic();
 	this->m_reslice->Update();
 
 	int inDim[3] = { 0, 0, 0 };
 	this->m_inputImage->GetDimensions(inDim);
+
 	this->m_outputImage = this->m_reslice->GetOutput();
 	if (this->m_axis == SagittalAxis)
 	{
@@ -580,9 +602,20 @@ vtkSmartPointer<vtkImageData> MPRSlicer::GetRawOutputImage()
 	this->m_reslice->SetInputData(this->m_inputImage);
 	this->m_reslice->SetOutputDimensionality(2);
 	this->m_reslice->SetInterpolationModeToCubic();
+	//this->m_reslice->SetOutputSpacing(0.423828, 0.423828, -0.700012);
 	this->m_reslice->Update();
 
 	this->m_outputImage = this->m_reslice->GetOutput();
+	RAD_LOG_CRITICAL("***************************************");
+	int dim[3] = { 0, 0, 0 };
+	this->m_outputImage->GetDimensions(dim);
+
+	double spacing[3] = { 0, 0, 0 };
+	
+	this->m_outputImage->GetSpacing(spacing);
+	RAD_LOG_CRITICAL("Axis:" << this->m_axis << " Dim1:" << dim[0] << " Dim2:" << dim[1] << " Dim3:" << dim[2]);
+	RAD_LOG_CRITICAL("Axis:" << this->m_axis << " Spacing1:" << spacing[0] << " Spacing2:" << spacing[1] << " Spacing3:" << spacing[2]);
+	RAD_LOG_CRITICAL("***************************************");
 	return this->m_outputImage;
 }
 
@@ -591,8 +624,13 @@ long int MPRSlicer::GetPixelIntensity(int x_pos, int y_pos)
 	long int value = 0;
 	int dim[3] = { 0, 0, 0 };
 	this->GetRawOutputImage()->GetDimensions(dim);
-
-	int dataType = this->GetRawOutputImage()->GetScalarType();
+	double spacing[3] = { 0, 0, 0 };
+	this->GetRawOutputImage()->GetSpacing(spacing);
+	if (x_pos > 0 && x_pos<dim[0] && y_pos>0 && y_pos < dim[1])
+	{
+		value = this->GetRawOutputImage()->GetScalarComponentAsDouble(x_pos, y_pos, 0, 0);
+	}
+	/*int dataType = this->GetRawOutputImage()->GetScalarType();
 	switch (dataType)
 	{
 		case VTK_UNSIGNED_CHAR:
@@ -625,7 +663,7 @@ long int MPRSlicer::GetPixelIntensity(int x_pos, int y_pos)
 			RAD_LOG_CRITICAL("Unknown data type:" << dataType);
 		}
 			break;
-	}
+	}*/
 
 	/*signed short int* pixelData = (signed short int*)this->GetRawOutputImage()->GetScalarPointer();
 	value = pixelData[y_pos*dim[1] + x_pos];*/

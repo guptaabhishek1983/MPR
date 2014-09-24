@@ -175,7 +175,7 @@ void MPR::initFromDir1(vector<string> dicomFiles)
 
 			d->m_initOrient->Identity();
 			d->m_initOrient->DeepCopy(d->m_matrx);
-			d->m_initOrient->Transpose();
+			//d->m_initOrient->Transpose();
 			
 			if (pDicom->Get_BITS_ALLOCATED() / 8 == 1)
 			{
@@ -234,7 +234,7 @@ void MPR::initFromDir1(vector<string> dicomFiles)
 			string imagePosition = string(pDicom->Get_IMAGE_POSITION());
 			vector<string> _imgPosition;
 			tokenize(imagePosition, _imgPosition, "\\", true);
-			spacing[2] = spacing[2] - convert_to_double(_imgPosition.at(2).c_str()); //4.0;
+			spacing[2] =  spacing[2] - convert_to_double(_imgPosition.at(2).c_str()); //4.0;
 		}
 
 		image pixelData = born_image();
@@ -458,56 +458,109 @@ double MPR::GetCurrentImagePosition(Axis axis)
 	return pos;
 }
 
-double MPR::GetCurrentImagePositionRelativeToOrigin(Axis axis)
+void MPR::GetCurrentSlicerPositionRelativeToIndex(Axis axis, int& xPos, int& yPos)
 {
-	double spacing[3] = { 0, 0, 0 };
-	d->GetInput()->GetSpacing(spacing);
+	vtkSmartPointer<vtkImageData> outputImage = d->m_slicers[(int)axis]->GetRawOutputImage();
 
-	double pos = 0;
-	for (int i = 0; i<3; i++)
-	{
-		if (i == axis)
-		{
-			pos = d->m_slicers[i]->GetSlicerPosition();
-		}
-	}
 	
-	switch (axis)
-	{
-		case AxialAxis:
-			RAD_LOG_CRITICAL("Axial Slicer position:" << pos);
-			break;
+	int out_dim[3] = { 0, 0, 0 };
+	outputImage->GetDimensions(out_dim);
 
-		case CoronalAxis:
-			RAD_LOG_CRITICAL("Coronal Slicer position:" << pos);
+	int in_dim[3] = { 0, 0, 0 };
+	d->GetInput()->GetDimensions(in_dim);
 
-			break;
+	double spacing[3] = { 0, 0, 0 };
+	outputImage->GetSpacing(spacing);
 
-		case SagittalAxis:
-			RAD_LOG_CRITICAL("Sagittal Slicer position:" << pos);
-			break;
-	}
-	double origin[3];
-	d->GetInput()->GetOrigin(origin);
+
+	// this number correspnds to dimension of input image.
+	
+	int result = 0;
 	switch (axis)
 	{
 		case RTViewer::AxialAxis:
-			pos -= origin[2];
+		{
+			int xCurrentImageNumber = d->m_slicers[(int)SagittalAxis]->GetSlicerPositionAsIndex();
+
+			int yCurrentImageNumber = d->m_slicers[(int)CoronalAxis]->GetSlicerPositionAsIndex();
+
+			xPos = (xCurrentImageNumber*out_dim[0]) / in_dim[0];
+			yPos = (yCurrentImageNumber*out_dim[1]) / in_dim[1];
+		}
 			break;
 		case RTViewer::CoronalAxis:
-			pos -= origin[1];
+		{
+			int xCurrentImageNumber = d->m_slicers[(int)SagittalAxis]->GetSlicerPositionAsIndex();
+
+			int yCurrentImageNumber = d->m_slicers[(int)AxialAxis]->GetSlicerPositionAsIndex();
+
+			xPos = (xCurrentImageNumber*out_dim[0]) / in_dim[0];
+			yPos = (yCurrentImageNumber*out_dim[1]) / in_dim[2];
+
+			
+		}
 			break;
 		case RTViewer::SagittalAxis:
-			pos -= origin[0];
+		{
+			int xCurrentImageNumber = d->m_slicers[(int)CoronalAxis]->GetSlicerPositionAsIndex();
+
+			int yCurrentImageNumber = d->m_slicers[(int)AxialAxis]->GetSlicerPositionAsIndex();
+
+			xPos = (xCurrentImageNumber*out_dim[0]) / in_dim[1];
+			yPos = (yCurrentImageNumber*out_dim[1]) / in_dim[2];
+
+		}
 			break;
 		default:
 			break;
 	}
 
+
+	//double pos = 0;
+	//for (int i = 0; i<3; i++)
+	//{
+	//	if (i == axis)
+	//	{
+	//		pos = d->m_slicers[i]->GetSlicerPosition();
+	//	}
+	//}
+	//
+	//switch (axis)
+	//{
+	//	case AxialAxis:
+	//		RAD_LOG_CRITICAL("Axial Slicer position:" << pos);
+	//		break;
+
+	//	case CoronalAxis:
+	//		RAD_LOG_CRITICAL("Coronal Slicer position:" << pos);
+
+	//		break;
+
+	//	case SagittalAxis:
+	//		RAD_LOG_CRITICAL("Sagittal Slicer position:" << pos);
+	//		break;
+	//}
+	//double origin[3];
+	//d->GetInput()->GetOrigin(origin);
 	//switch (axis)
 	//{
 	//	case RTViewer::AxialAxis:
-	//		//pos = pos / fabs(spacing[2]);
+	//		pos -= origin[2];
+	//		break;
+	//	case RTViewer::CoronalAxis:
+	//		pos -= origin[1];
+	//		break;
+	//	case RTViewer::SagittalAxis:
+	//		pos -= origin[0];
+	//		break;
+	//	default:
+	//		break;
+	//}
+
+	//switch (axis)
+	//{
+	//	case RTViewer::AxialAxis:
+	//		//pos = pos ;
 	//		break;
 	//	case RTViewer::CoronalAxis:
 	//		pos = pos / fabs(spacing[1]);
@@ -518,7 +571,7 @@ double MPR::GetCurrentImagePositionRelativeToOrigin(Axis axis)
 	//	default:
 	//		break;
 	//}
-	return fabs(pos);
+	//return fabs(pos);
 }
 
 void MPR::GetOutputImageDisplayDimensions(Axis axis, int& width, int& height)
@@ -602,6 +655,12 @@ string MPR::GetOrientationMarkerBottom(Axis axis)
 	return "";
 }
 
+void MPR::GetXYZPixelSpacing(int axis, double* spacing)
+{
+
+	d->m_slicers[axis]->GetRawOutputImage()->GetSpacing(spacing);
+	RAD_LOG_CRITICAL("<abhishek> Axis:" << axis <<  " Sx:"<<spacing[0] << " Sy:"<<spacing[1] << "Sz:" << spacing[2]);
+}
 double MPR::GetPixelSpacing(int axis)
 {
 	switch (axis)

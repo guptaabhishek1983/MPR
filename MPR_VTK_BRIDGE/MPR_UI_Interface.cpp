@@ -56,6 +56,8 @@ void MPR_UI_Interface::InitMPR(String^ path)
 		fileNames.push_back(dicomFile);
 	}
 	this->m_mpr->initFromDir1(fileNames);
+
+	long val = this->m_mpr->GetPixelIntensity(Axis::SagittalAxis, 152, 162);
 }
 
 BitmapWrapper^ MPR_UI_Interface::GetDisplayImage(int axis)
@@ -65,8 +67,8 @@ BitmapWrapper^ MPR_UI_Interface::GetDisplayImage(int axis)
 	
 	BitmapWrapper^ bmp = gcnew BitmapWrapper(displayImage.data, displayImage.width, displayImage.height, "MONOCHROME");
 	int newWidth, newHeight;
-	this->m_mpr->GetOutputImageDisplayDimensions((Axis)axis, newWidth, newHeight);
-	bmp->Resize(newWidth, newHeight);
+	//this->m_mpr->GetOutputImageDisplayDimensions((Axis)axis, newWidth, newHeight);
+	//bmp->Resize(newWidth, newHeight);
 	return bmp;
 }
 
@@ -89,9 +91,12 @@ double MPR_UI_Interface::GetCurrentImagePosition(int axis)
 	return this->m_mpr->GetCurrentImagePosition((Axis)axis);
 }
 
-double MPR_UI_Interface::GetCurrentImagePositionRelativeToOrigin(int axis)
+void MPR_UI_Interface::GetCurrentSlicerPositionRelativeToIndex(int axis, int* pos)
 {
-	return this->m_mpr->GetCurrentImagePositionRelativeToOrigin((Axis)axis);
+	int xPos = 0, yPos = 0;
+	this->m_mpr->GetCurrentSlicerPositionRelativeToIndex((Axis)axis,xPos, yPos);
+	pos[0] = xPos;
+	pos[1] = yPos;
 }
 
 void MPR_UI_Interface::UpdateSlicerPosition(int axis, float x, float y)
@@ -163,13 +168,15 @@ String^ MPR_UI_Interface::GetOrientationMarkerBottom(int axis)
 }
 
 
-double MPR_UI_Interface::GetPixelSpacing(int p_axis)
+void MPR_UI_Interface::GetPixelSpacing(int p_axis, double* pixelSpacing)
 {
-	return this->m_mpr->GetPixelSpacing(p_axis);
+	this->m_mpr->GetXYZPixelSpacing(p_axis,pixelSpacing);
 }
 
 long int MPR_UI_Interface::GetPixelIntensity(int axis, int x_pos, int y_pos)
 {
+	if (this->m_mpr == NULL) return 0;
+	
 	long value = this->m_mpr->GetPixelIntensity((Axis)axis, x_pos, y_pos);
 	return value;
 }

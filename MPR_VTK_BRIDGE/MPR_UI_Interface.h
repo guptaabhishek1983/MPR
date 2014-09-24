@@ -25,13 +25,13 @@ namespace MPR_VTK_BRIDGE {
 		void Scroll(int axis, int delta);
 		int GetCurrentImageIndex(int axis);
 		double GetCurrentImagePosition(int axis);
-		double GetCurrentImagePositionRelativeToOrigin(int axis);
+		void GetCurrentSlicerPositionRelativeToIndex(int axis, int* pos);
 		void UpdateSlicerPosition(int axis, float x, float y);
 		String^ GetOrientationMarkerLeft(int axis);
 		String^ GetOrientationMarkerRight(int axis);
 		String^ GetOrientationMarkerTop(int axis);
 		String^ GetOrientationMarkerBottom(int axis);
-		double GetPixelSpacing(int axis);
+		void GetPixelSpacing(int axis, double* pixelSpacing);
 		long int GetPixelIntensity(int axis, int x_pos, int y_pos);
 	public: //delegates
 		delegate void CursorTranslationCompleted();

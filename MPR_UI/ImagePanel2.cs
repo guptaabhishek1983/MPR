@@ -16,6 +16,10 @@ namespace MPR_UI
     {
         public delegate void MPRCursorTranslated(Point p);
         public event MPRCursorTranslated EVT_MPRCursorTranslated;
+
+        public delegate void RaisePixelIntensity(Point p);
+        public event RaisePixelIntensity EVT_RaisePixelIntensity;
+
         private Bitmap m_storedBitmap;
         private struct MPRCursor
         {
@@ -194,13 +198,18 @@ namespace MPR_UI
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+            Point p = this.GetOriginalCoords(new Point(e.X, e.Y));
             if (e.Button == System.Windows.Forms.MouseButtons.Left && MPRCursorSelected == true) 
             {
-                Point p = this.GetOriginalCoords(new Point(e.X, e.Y));
+                
                 //Point pDiff = new Point(e.X - lastMousePositionORG.X, e.Y - lastMousePositionORG.Y);
-                EVT_MPRCursorTranslated(p);
+                EVT_MPRCursorTranslated(new Point((int)(p.X*XPixelSpacing), (int)(p.Y*YPixelSpacing)));
             }
 
+            if(EVT_RaisePixelIntensity!=null)
+            {
+                EVT_RaisePixelIntensity(new Point((int)(p.X ), (int)(p.Y)));
+            }
             if (objectSelected == true)
             {
                 objectLocation = e.Location;
@@ -238,6 +247,10 @@ namespace MPR_UI
             Pen _pen1 = new Pen(Color.LightGoldenrodYellow, 2.0F);
             Pen _pen2 = new Pen(Color.ForestGreen, 2.0F);
             Font _font = new Font("Verdana", 10.0F);
+            int spacing = 2;
+            int currX = spacing;
+            int currY = 4 + spacing;
+            SizeF sz = new SizeF(0F, 0F);
             if (this.Parent.Parent.Name.CompareTo("ImageControl") == 0)
             {
                 var imgControl = (ImageControl)this.Parent.Parent;
@@ -246,21 +259,48 @@ namespace MPR_UI
                 StringBuilder _sb = new StringBuilder();
                 _sb.Append("Scroll Pos#");
                 _sb.Append(idx);
-                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(10, 0));
+                sz = e.Graphics.MeasureString(_sb.ToString(), _font);
+                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(currX, currY));
+                currY = currY + (int)sz.Height + spacing;
 
                 _sb.Clear();
                 _sb.Append("Slicer Pos#");
                 _sb.Append(imgControl.Position);
-                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(10, 20));
+                sz = e.Graphics.MeasureString(_sb.ToString(), _font);
+                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(currX, currY));
+                currY = currY + (int)sz.Height + spacing;
 
                 _sb.Clear();
                 _sb.Append("Slicer idx#");
                 _sb.Append(imgControl.Index);
-                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(10, 40));
+                sz = e.Graphics.MeasureString(_sb.ToString(), _font);
+                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(currX, currY));
+                currY = currY + (int)sz.Height + spacing;
+
+                
+                
+            }
+
+            // paint bottom left
+            currY = this.Height - 10 - spacing;
+            if (this.Parent.Parent.Name.CompareTo("ImageControl") == 0)
+            {
+                var imgControl = (ImageControl)this.Parent.Parent;
+
+                StringBuilder _sb = new StringBuilder();
+                _sb.Clear();
+                _sb.Append("X: ").Append(lastMousePosition.X).Append("px Y:").Append(lastMousePosition.Y).Append(" px"); ;
+                _sb.Append("/");
+                _sb.Append("X: ").Append((int)(lastMousePosition.X*XPixelSpacing)).Append(" mm Y:").Append((int)(lastMousePosition.Y*YPixelSpacing)).Append(" mm");
+                sz = e.Graphics.MeasureString(_sb.ToString(), _font);
+                currY = currY - (int)sz.Height;
+                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(currX, currY));
 
                 _sb.Clear();
-                _sb.Append("X: ").Append(lastMousePosition.X).Append(" Y:").Append(lastMousePosition.Y);
-                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(10, 50));
+                _sb.Append("Value:").Append(PixelIntensity);
+                sz = e.Graphics.MeasureString(_sb.ToString(), _font);
+                currY = currY - (int)sz.Height;
+                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(currX, currY));
             }
 
             if (cursorPosition != null)
@@ -341,9 +381,7 @@ namespace MPR_UI
         public PointF GetActualDisplayPosition(PointF point)
         {
             
-            point.X = (int)(point.X / UI_XPixelSpacing);
-            point.X = (int)(point.X / UI_YPixelSpacing);
-
+           
             PointF p = this.m_coordinateMapping.GetActualDisplayPosition(point);
             p = new PointF((float)(this.currentZoomFactor * (p.X + this.currentDisplayOffsetPt.X)), 
                 (float)(this.currentZoomFactor * (p.Y + this.currentDisplayOffsetPt.Y)));
@@ -352,8 +390,8 @@ namespace MPR_UI
 
         public Point GetOriginalCoords(Point p)
         {
-            Point ret = new Point((int)(((p.X / currentZoomFactor) - currentDisplayOffsetPt.X)*UI_XPixelSpacing),
-                (int)(((p.Y / currentZoomFactor) - currentDisplayOffsetPt.Y) * UI_YPixelSpacing));
+            Point ret = new Point((int)(((p.X / currentZoomFactor) - currentDisplayOffsetPt.X)),
+                (int)(((p.Y / currentZoomFactor) - currentDisplayOffsetPt.Y)));
             return this.m_coordinateMapping.GetActualPosition(ret);
         }
 
@@ -363,8 +401,6 @@ namespace MPR_UI
 
         public double YPixelSpacing { get; set; }
 
-        public double UI_XPixelSpacing { get; set; }
-
-        public double UI_YPixelSpacing { get; set; }
+        public int PixelIntensity { get; set; }
     }
 }
