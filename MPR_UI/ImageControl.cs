@@ -57,7 +57,35 @@ namespace MPR_UI
             {
                 MPR_UI_Interface.WriteLog("Handling update image event.");
                 this.m_imagePanel.StoreBitmap = bmpWrapper.StoredBitmap;
-                UpdateCursorPosition();
+                //UpdateCursorPosition();
+                PointF cursorPoint = new PointF((float)reslicerPositionX, (float)reslicerPositionY);
+                switch(m_axis)
+                {
+                    case Axis.AxialAxis:
+                        {
+                            this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.SagittalAxis);
+                            this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.CoronalAxis);
+                            
+                        }
+                        break;
+                    case Axis.SagittalAxis:
+                        {
+                            this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.CoronalAxis);
+                            this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.AxialAxis);
+                        }
+                        break;
+
+                    case Axis.CoronalAxis:
+                        {
+                            this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.SagittalAxis);
+                            this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.AxialAxis);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                
+                
                 Invalidate();
                 Update();
             }
@@ -66,7 +94,7 @@ namespace MPR_UI
         private void TranslateMPRCursor(Point p)
         {
             m_UIInterface.UpdateSlicerPosition((int)this.m_axis, (float)p.X, (float)p.Y);
-            UpdateCursorPosition();
+            //UpdateCursorPosition();
             Invalidate();
             Update();
         }
@@ -77,7 +105,7 @@ namespace MPR_UI
             this.scrollBar.Minimum = 0;
             this.scrollBar.SmallChange = 1;
             this.scrollBar.LargeChange = 1;
-            this.scrollBar.Value = m_UIInterface.GetCurrentImageIndex((int)this.m_axis);
+            ScrollBarCurrentVal = this.scrollBar.Value = m_UIInterface.GetCurrentImageIndex((int)this.m_axis);
 
             // Init scroll bar event
             this.scrollBar.ValueChanged += scrollBar_ValueChanged;
@@ -101,7 +129,7 @@ namespace MPR_UI
             }
             this.m_imagePanel.XPixelSpacing = _pixelSpacing[0];
             this.m_imagePanel.YPixelSpacing = _pixelSpacing[1];
-            UpdateCursorPosition();
+           // UpdateCursorPosition();
             
         }
 
@@ -109,71 +137,70 @@ namespace MPR_UI
         void scrollBar_ValueChanged(object sender, EventArgs e)
         {
 
-            if (scrollBar.Value != Index)
-            {
-                m_UIInterface.Scroll((int)this.m_axis, scrollBar.Value - Index);
+
+            m_UIInterface.Scroll((int)this.m_axis, ScrollBarCurrentVal - scrollBar.Value);
                 LoadImage();
-            }
+                ScrollBarCurrentVal = scrollBar.Value;
         }
 
 
-        internal void UpdateCursorPosition()
-        {
-            switch (this.m_axis)
-            {
-                case Axis.AxialAxis:
-                    {
-                        int[] _position = { 0,0};
-                        unsafe
-                        {
-                            fixed (int* resPtr = _position)
-                            {
-                                m_UIInterface.GetCurrentSlicerPositionRelativeToIndex((int)this.m_axis, resPtr);
-                            }
-                        }
+        //internal void UpdateCursorPosition()
+        //{
+        //    switch (this.m_axis)
+        //    {
+        //        case Axis.AxialAxis:
+        //            {
+        //                int[] _position = { 0,0};
+        //                unsafe
+        //                {
+        //                    fixed (int* resPtr = _position)
+        //                    {
+        //                        m_UIInterface.GetCurrentSlicerPositionRelativeToIndex((int)this.m_axis, resPtr);
+        //                    }
+        //                }
 
-                        PointF cursorPoint = new PointF((float)_position[0], (float)_position[1]);
+        //                PointF cursorPoint = new PointF((float)_position[0], (float)_position[1]);
 
-                        this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.CoronalAxis);
-                        this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.SagittalAxis);
-                    }
-                    break;
-                case Axis.CoronalAxis:
-                    {
-                        int[] _position = { 0, 0 };
-                        unsafe
-                        {
-                            fixed (int* resPtr = _position)
-                            {
-                                m_UIInterface.GetCurrentSlicerPositionRelativeToIndex((int)this.m_axis, resPtr);
-                            }
-                        }
-                        PointF cursorPoint = new PointF((float)_position[0], (float)_position[1]);
+        //                this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.CoronalAxis);
+        //                this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.SagittalAxis);
+        //            }
+        //            break;
+        //        case Axis.CoronalAxis:
+        //            {
+        //                int[] _position = { 0, 0 };
+        //                unsafe
+        //                {
+        //                    fixed (int* resPtr = _position)
+        //                    {
+        //                        m_UIInterface.GetCurrentSlicerPositionRelativeToIndex((int)this.m_axis, resPtr);
+        //                    }
+        //                }
+        //                PointF cursorPoint = new PointF((float)_position[0], (float)_position[1]);
 
-                        this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.SagittalAxis);
-                        this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.AxialAxis);
+        //                this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.SagittalAxis);
+        //                this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.AxialAxis);
 
-                    }
-                    break;
-                case Axis.SagittalAxis:
-                    {
-                        int[] _position = { 0, 0 };
-                        unsafe
-                        {
-                            fixed (int* resPtr = _position)
-                            {
-                                m_UIInterface.GetCurrentSlicerPositionRelativeToIndex((int)this.m_axis, resPtr);
-                            }
-                        }
-                        PointF cursorPoint = new PointF((float)_position[0], (float)_position[1]);
-                        this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.CoronalAxis);
-                        this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.AxialAxis);
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
+        //            }
+        //            break;
+        //        case Axis.SagittalAxis:
+        //            {
+        //                int[] _position = { 0, 0 };
+        //                unsafe
+        //                {
+        //                    fixed (int* resPtr = _position)
+        //                    {
+        //                        m_UIInterface.GetCurrentSlicerPositionRelativeToIndex((int)this.m_axis, resPtr);
+        //                    }
+        //                }
+        //                PointF cursorPoint = new PointF((float)_position[0], (float)_position[1]);
+        //                this.m_imagePanel.SetCursorPositionX_Axis(cursorPoint, Axis.CoronalAxis);
+        //                this.m_imagePanel.SetCursorPositionY_Axis(cursorPoint, Axis.AxialAxis);
+        //            }
+        //            break;
+        //        default:
+        //            break;
+        //    }
+        //}
 
         internal void LoadImage()
         {
@@ -182,7 +209,8 @@ namespace MPR_UI
             Index = m_UIInterface.GetCurrentImageIndex((int)this.m_axis);
             //if (Index != scrollBar.Value)
             //    MessageBox.Show("Alert");
-            this.m_imagePanel.StoreBitmap = bmpWrapper.StoredBitmap;
+            
+            //this.m_imagePanel.StoreBitmap = bmpWrapper.StoredBitmap;
             
             this.Invalidate();
             
@@ -214,5 +242,7 @@ namespace MPR_UI
         {
             this.Cursor = cursor;
         }
+
+        public int ScrollBarCurrentVal { get; set; }
     }
 }

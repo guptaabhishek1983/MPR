@@ -14,8 +14,11 @@
 using namespace std;
 #define __FILENAME__ "DSA.cpp"
 
+//#define DSA
+#define INTERPOLATION
 int _tmain(int argc, _TCHAR* argv[])
 {
+#ifdef DSA
 	std::string firstFrame = "D:\\DicomDataSet\\XA\\Dataset1\\wwwl.dcm";
 	//std::string secondFrame = "D:\\DicomDataSet\\XA\\Dataset1\\IM9.dcm";
 
@@ -157,7 +160,136 @@ int _tmain(int argc, _TCHAR* argv[])
 		
 	}
 
-	
+#endif
+
+#ifdef INTERPOLATION
+
+	std::string inputImage = "D:\\DicomDataSet\\Interpolation\\Image_0.dcm";
+	// grey 16 bit images
+	RadRTDicomInterface* pDicom = new RTDcmtkDicomInterface(inputImage.c_str());
+	//RadRTDicomInterface* secondDicom = new RTDcmtkDicomInterface(secondFrame.c_str());
+	if (pDicom->IsFileLoadedSuccessfully() == 1)
+	{
+		image overlay = born_image();
+		image input_raw = born_image();
+		input_raw.width = pDicom->Get_ROW();
+		input_raw.height = pDicom->Get_COLOUMN();
+		input_raw.size = input_raw.width*input_raw.height;
+		input_raw.type = TYPE_S16Data;
+		input_raw.data = rad_get_memory(input_raw.size*rad_sizeof(input_raw.type));
+
+		pDicom->InflateSingleFrameDicomPixelData(&input_raw, &overlay);
+
+		short* _inData = (short*)input_raw.data;
+
+		const int zoom = 2;
+
+		image interpolated_raw = born_image();
+		interpolated_raw.width = input_raw.width*zoom;
+		interpolated_raw.height = input_raw.height*zoom;
+		interpolated_raw.size = interpolated_raw.width*interpolated_raw.height;
+		interpolated_raw.type = TYPE_S16Data;
+		interpolated_raw.data = rad_get_memory(interpolated_raw.size*rad_sizeof(interpolated_raw.type));
+
+		short* _interpolatedData = (short*)interpolated_raw.data;
+
+		short A, B, C, D, x, y, gray;
+
+		float xRatio = ((float)(input_raw.width - 1)) / interpolated_raw.width;
+
+		float yRatio = ((float)(input_raw.height - 1)) / interpolated_raw.height;
+
+		float x_diff, y_diff;
+
+		int offset = 0;
+
+		for (int i = 0; i < interpolated_raw.height; i++)
+
+		{
+
+			for (int j = 0; j < interpolated_raw.width; j++)
+
+			{
+
+				x = (short)(xRatio * j);
+
+				y = (short)(yRatio * i);
+
+				x_diff = (xRatio * j) - x;
+
+				y_diff = (yRatio * i) - y;
+
+				int index = y * input_raw.width + x;
+
+
+
+				// range is 0 to 65535 thus bitwise AND with 0xffff
+
+				A = (short)(_inData[index] & 0xffff);
+
+				B = (short)(_inData[index + 1] & 0xffff);
+
+				C = (short)(_inData[index + input_raw.width] & 0xffff);
+
+				D = (short)(_inData[index + input_raw.width + 1] & 0xffff);
+
+				gray = (short)(
+
+					A * (1 - x_diff) * (1 - y_diff) + B * (x_diff)* (1 - y_diff) +
+
+					C * (y_diff)* (1 - x_diff) + D * (x_diff * y_diff)
+
+					);
+
+
+
+				_interpolatedData[offset++] = gray;
+
+
+
+			}
+		}
+
+		image displayImage = born_image();
+		displayImage.width = interpolated_raw.width;
+		displayImage.height = interpolated_raw.height;
+		displayImage.size = interpolated_raw.size;
+		displayImage.type = TYPE_U8Data;
+
+		displayImage.data = rad_get_memory(displayImage.height*displayImage.width*rad_sizeof(displayImage.type));
+
+		voi_lut_transform_image_fast(displayImage, interpolated_raw, 400, 40,
+			0, 255,
+			1.0,
+			-1024);
+
+		u_int width = displayImage.width;
+		u_int height = displayImage.height;
+
+
+		FILE *fp = fopen("D:\\Interpolated.ppm", "wb");
+
+		unsigned char *p3;
+		p3 = (unsigned char *)displayImage.data;
+
+		fprintf(fp, "P3\n%d %d\n255", width, height);
+		u_int ix, iy;
+		for (iy = 0; iy < height; iy++)
+			for (ix = 0; ix < width; ix++)	{
+				if (((iy*width) + ix) % 5 == 0)
+					fprintf(fp, "\n");
+				fprintf(fp, "%li ", p3[iy*displayImage.width + ix]);
+				fprintf(fp, "%li ", p3[iy*displayImage.width + ix]);
+				fprintf(fp, "%li ", p3[iy*displayImage.width + ix]);
+			}
+		fclose(fp);
+
+
+		// ushort[] temp = new ushort[targetWidth * targetHeight];
+
+	}
+
+#endif
 
 	return 0;
 }

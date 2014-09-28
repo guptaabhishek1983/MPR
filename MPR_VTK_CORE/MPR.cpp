@@ -30,6 +30,8 @@ using namespace RTViewer;
 #undef __MODULENAME__
 #define __MODULENAME__ "MPR"
 
+#include "MPRTransform.h"
+
 namespace RTViewer
 {
 	struct MPRData
@@ -48,6 +50,8 @@ namespace RTViewer
 		double m_wl;
 		double m_rs;
 		double m_ri;
+
+		MPRTransform* m_cursorTransform;
 	private:
 		
 	public:
@@ -66,7 +70,7 @@ MPR::MPR(void)
 	d = new MPRData();
 	d->m_initOrient = vtkSmartPointer<vtkMatrix4x4>::New();
 	d->m_initOrient->Identity();
-
+	d->m_cursorTransform = MPRTransform::New();
 }
 
 MPR::~MPR(void)
@@ -314,7 +318,7 @@ void MPR::initFromDir1(vector<string> dicomFiles)
 	double CTBounds[6];
 	CTMPRCuboid->GetBounds(CTBounds);
 	//CTMPRCuboid->SetOrigin(CTBounds[0],CTBounds[2],CTBounds);
-	RAD_LOG_CRITICAL("<abhishek> bounds:" << CTBounds[0] << ":" << CTBounds[1] << ":" << CTBounds[2] << ":" << CTBounds[3] << ":" << CTBounds[4] << ":" << CTBounds[5]);
+	//RAD_LOG_CRITICAL("<abhishek> bounds:" << CTBounds[0] << ":" << CTBounds[1] << ":" << CTBounds[2] << ":" << CTBounds[3] << ":" << CTBounds[4] << ":" << CTBounds[5]);
 	this->initFromImage(CTMPRCuboid);
 
 	CTMPRCuboid->Print(cerr);
@@ -340,18 +344,26 @@ void MPR::initFromImage(vtkSmartPointer<vtkImageData> image)
 	{
 		MPRSlicer* slicer = new MPRSlicer((Axis)i);
 		slicer->SetInput(image);
-		slicer->InitSlicer(d->m_initOrient);
+		slicer->InitSlicer(d->m_initOrient, d->m_cursorTransform);
+		
 		slicer->SetVOI_LUTParameters(d->m_ww, d->m_wl, d->m_rs, d->m_ri);
+		
 		//slicer->InitSlicer();
 
 		d->m_slicers[i] = slicer;
 	}
 
+	d->m_cursorTransform->Identity();
+
+	d->m_cursorTransform->Translate(image->GetCenter());
+	d->m_cursorTransform->ResetRotations();
+
 	// scroll slicers to get middle image
-	for (int i = 0; i<3; i++)
+	//TODO: DELETE ME
+	/*for (int i = 0; i<3; i++)
 	{
 		d->m_slicers[i]->Scroll((d->m_slicers[i]->GetNumberOfImages() / 2));
-	}
+	}*/
 }
 
 image MPR::GetOutputImage(Axis axis)
@@ -369,55 +381,116 @@ image MPR::GetOutputImage(Axis axis)
 
 void MPR::Scroll(Axis axis, int delta)
 {
-	for(int i=0; i<3; i++)
+
+	double spacing[3];
+	d->GetInput()->GetSpacing(spacing);
+
+	double pos[] = { 0, 0, 0 };
+	d->m_slicers[(int)axis]->GetTransform()->TransformPoint(pos, pos);
+	RAD_LOG_CRITICAL("Translation delta:" << delta);
+	RAD_LOG_CRITICAL("Initial Position x:" << pos[0] << " y:" << pos[1] << " z:" << pos[2]);
+
+	double t[] = { 0, 0, -delta*spacing[2] };
+	d->m_slicers[(int)axis]->GetTransform()->TransformPoint(t, t);
+	RAD_LOG_CRITICAL("Translation vector x:" << t[0] << " y:" << t[1] << " z:" << t[2]);
+	t[0] -= pos[0]; t[1] -= pos[1]; t[2] -= pos[2];
+	RAD_LOG_CRITICAL("After translation x:" << t[0] << " y:" << t[1] << " z:" << t[2]);
+	double bounds[] = { 0, 0, 0, 0, 0, 0 };
+	d->GetInput()->GetBounds(bounds);
+
+	for (int i = 0; i<3; i++)
+	{
+		double v = pos[i] + t[i];
+		if (v < bounds[i * 2] || v > bounds[i * 2 + 1])
+		{
+			RAD_LOG_CRITICAL("Going out of bounds. Returning")
+			return;
+		}
+	}
+
+	d->m_cursorTransform->Translate(t);
+
+	/*for(int i=0; i<3; i++)
 	{
 		if(i == axis)
 		{
 			d->m_slicers[i]->Scroll(delta);
 		}
-	}
+	}*/
 }
 
-void MPR::Scroll2(Axis axis, float newPosition)
+void MPR::Scroll2(Axis axis, float dx, float dy)
 {
-	
-	double origin[3];
-	d->GetInput()->GetOrigin(origin);
-	double spacing[3];
-	d->GetInput()->GetSpacing(spacing);
+	// Find out the current postion
+	double pos[] = { 0, 0, 0 };
+	d->m_slicers[(int)axis]->GetTransform()->TransformPoint(pos, pos);
 
-	double currentPos = d->m_slicers[axis]->GetSlicerPosition();
-	int delta = 0;
-	switch (axis)
+	// Translate the current slice matrix
+	double t[] = { dx, dy, 0 };
+	d->m_slicers[(int)axis]->GetTransform()->Translate(t[0], t[1], t[2]);
+
+	// Find out the translated position
+	double tpos[] = { 0, 0, 0 };
+	d->m_slicers[(int)axis]->GetTransform()->TransformPoint(tpos, tpos);
+
+	// Translate the slice matrix back to its previous position
+	d->m_slicers[(int)axis]->GetTransform()->Translate(-t[0], -t[1], -t[2]);
+
+	// Evaluate the actual translation
+	for (int i = 0; i<3; i++)
+		t[i] = tpos[i] - pos[i];
+
+	// Ensure that tpos is not outside bounds
+	double bounds[] = { 0, 0, 0, 0, 0, 0 };
+	d->GetInput()->GetBounds(bounds);
+	for (int i = 0; i<3; i++)
 	{
-		case AxialAxis:
-		{
-			// this condition is valid for Axial plane where z-directions increases in -ve direction. 
-			// But UI gives the point in +ve 
-			if (spacing[2] < 0)
-				newPosition = newPosition*-1;
-			newPosition += origin[2];
-			delta = (newPosition - currentPos) / spacing[2];
-		}
-			break;
-		case CoronalAxis:
-		{
-			newPosition += origin[1];
-			delta = (newPosition - currentPos) / spacing[1];
-		}
-			break;
-		case SagittalAxis:
-		{
-			newPosition += origin[0];
-			delta = (newPosition - currentPos) / spacing[0];
-		}
-			break;
-		default:
-			break;
+		double& v = tpos[i];
+		if (v < bounds[i * 2] || v > bounds[i * 2 + 1])
+			return;
 	}
-	this->Scroll(axis, delta);
-	RAD_LOG_INFO("Delta is:" << delta);
-	return;
+
+	// Apply the translation on the cursor and update.
+	d->m_cursorTransform->Translate(t);
+
+
+	//double origin[3];
+	//d->GetInput()->GetOrigin(origin);
+	//double spacing[3];
+	//d->GetInput()->GetSpacing(spacing);
+
+	//double currentPos = d->m_slicers[axis]->GetSlicerPosition();
+	//int delta = 0;
+	//switch (axis)
+	//{
+	//	case AxialAxis:
+	//	{
+	//		// this condition is valid for Axial plane where z-directions increases in -ve direction. 
+	//		// But UI gives the point in +ve 
+	//		/*if (spacing[2] < 0)
+	//			newPosition = newPosition*-1;*/
+	//		newPosition += origin[2];
+	//		delta = (newPosition - currentPos) / spacing[2];
+	//	}
+	//		break;
+	//	case CoronalAxis:
+	//	{
+	//		newPosition += origin[1];
+	//		delta = (newPosition - currentPos) / spacing[1];
+	//	}
+	//		break;
+	//	case SagittalAxis:
+	//	{
+	//		newPosition += origin[0];
+	//		delta = (newPosition - currentPos) / spacing[0];
+	//	}
+	//		break;
+	//	default:
+	//		break;
+	//}
+	//this->Scroll(axis, delta);
+	//RAD_LOG_INFO("Delta is:" << delta);
+	//return;
 }
 int MPR::GetNumberOfImages(Axis axis)
 {
@@ -458,62 +531,138 @@ double MPR::GetCurrentImagePosition(Axis axis)
 	return pos;
 }
 
-void MPR::GetCurrentSlicerPositionRelativeToIndex(Axis axis, int& xPos, int& yPos)
+void MPR::GetCurrentSlicerPositionRelativeToIndex(Axis axis, double& xPos, double& yPos)
 {
-	vtkSmartPointer<vtkImageData> outputImage = d->m_slicers[(int)axis]->GetRawOutputImage();
+	//double pos[] = { 0, 0, 0 };
+	//d->m_slicers[(int)axis]->GetTransform()->TransformPoint(pos);// GetPosition(pos);
 
 	
-	int out_dim[3] = { 0, 0, 0 };
-	outputImage->GetDimensions(out_dim);
+	double pos[] = { 0, 0, 0 };
+	d->m_slicers[(int)axis]->GetTransform()->TransformPoint(pos, pos);
 
-	int in_dim[3] = { 0, 0, 0 };
-	d->GetInput()->GetDimensions(in_dim);
+	double origin1[3];
+	d->m_slicers[(int)axis]->GetRawOutputImage()->GetOrigin(origin1);
+
+	double origin[3];
+	d->GetInput()->GetOrigin(origin);
 
 	double spacing[3] = { 0, 0, 0 };
-	outputImage->GetSpacing(spacing);
+	d->GetInput()->GetSpacing(spacing);
 
+	//// convert to physical coordinates as per David's advise.
+	double xt = origin1[0] + spacing[0] * pos[0];
+	double yt = origin1[1] + spacing[1] * pos[1];
+	double zt = origin1[2] + spacing[2] * pos[2];
 
-	// this number correspnds to dimension of input image.
-	
-	int result = 0;
-	switch (axis)
+	// Apply the transform....
+	double * tp = d->m_slicers[(int)axis]->GetTransform()->GetLinearInverse()->TransformPoint(pos);
+
+	double out[4] = { 0, 0, 0, 0 };
+	// Convert back...
+	out[0] = (tp[0] -origin1[0]) / spacing[0];
+	out[1] = (tp[1] - origin1[1]) / spacing[1];
+	out[2] = (tp[2] - origin1[2]) / spacing[2];
+	out[3] = 0.0;
+
+	// Permute the points according to the reslice axes
+	// The positions are oin x, y, z...so make it y, z, x for example for the YZ slice..
+	/*vtkMatrix4x4 * resliceMat = d->m_slicers[(int)axis]->GetResliceAxes();
+	vtkMatrix4x4 * m_indexInv = vtkMatrix4x4::New();
+
+	if (resliceMat)
+	{
+		resliceMat->Invert(resliceMat, m_indexInv);
+		m_indexInv->MultiplyPoint(out, out);
+	}*/
+
+	xPos = fabs(out[0]);
+	yPos = fabs(out[1]);
+	/*switch (axis)
 	{
 		case RTViewer::AxialAxis:
 		{
-			int xCurrentImageNumber = d->m_slicers[(int)SagittalAxis]->GetSlicerPositionAsIndex();
-
-			int yCurrentImageNumber = d->m_slicers[(int)CoronalAxis]->GetSlicerPositionAsIndex();
-
-			xPos = (xCurrentImageNumber*out_dim[0]) / in_dim[0];
-			yPos = (yCurrentImageNumber*out_dim[1]) / in_dim[1];
+			xPos = fabs(out[0]);
+			yPos = fabs(out[1]);
 		}
 			break;
 		case RTViewer::CoronalAxis:
 		{
-			int xCurrentImageNumber = d->m_slicers[(int)SagittalAxis]->GetSlicerPositionAsIndex();
-
-			int yCurrentImageNumber = d->m_slicers[(int)AxialAxis]->GetSlicerPositionAsIndex();
-
-			xPos = (xCurrentImageNumber*out_dim[0]) / in_dim[0];
-			yPos = (yCurrentImageNumber*out_dim[1]) / in_dim[2];
-
-			
+			xPos = fabs(out[0]);
+			yPos = fabs(out[2]);
 		}
+			
 			break;
 		case RTViewer::SagittalAxis:
 		{
-			int xCurrentImageNumber = d->m_slicers[(int)CoronalAxis]->GetSlicerPositionAsIndex();
-
-			int yCurrentImageNumber = d->m_slicers[(int)AxialAxis]->GetSlicerPositionAsIndex();
-
-			xPos = (xCurrentImageNumber*out_dim[0]) / in_dim[1];
-			yPos = (yCurrentImageNumber*out_dim[1]) / in_dim[2];
-
+			xPos = fabs(out[0]);
+			yPos = fabs(out[2]);
 		}
 			break;
 		default:
 			break;
-	}
+	}*/
+	RAD_LOG_CRITICAL("************************");
+	RAD_LOG_CRITICAL("Axis:" << axis);
+	RAD_LOG_CRITICAL("(VTK) Transform Pos:" << pos[0] << ":" << pos[1] << ":" << pos[2]);
+	RAD_LOG_CRITICAL("(VTK) Output origin:" << origin1[0] << ":" << origin1[1] << ":" << origin1[2]);
+	RAD_LOG_CRITICAL("(VTK Math) Position:" << out[0] << ":" << out[1] << ":" << out[2]);
+	RAD_LOG_CRITICAL("Pos:" << xPos << ":" << yPos);
+	RAD_LOG_CRITICAL("************************");
+}
+	//vtkSmartPointer<vtkImageData> outputImage = d->m_slicers[(int)axis]->GetRawOutputImage();
+
+	//
+	//int out_dim[3] = { 0, 0, 0 };
+	//outputImage->GetDimensions(out_dim);
+
+	//int in_dim[3] = { 0, 0, 0 };
+	//d->GetInput()->GetDimensions(in_dim);
+
+	//double spacing[3] = { 0, 0, 0 };
+	//outputImage->GetSpacing(spacing);
+
+
+	//// this number correspnds to dimension of input image.
+	//
+	//int result = 0;
+	//switch (axis)
+	//{
+	//	case RTViewer::AxialAxis:
+	//	{
+	//		int xCurrentImageNumber = d->m_slicers[(int)SagittalAxis]->GetSlicerPositionAsIndex();
+
+	//		int yCurrentImageNumber = d->m_slicers[(int)CoronalAxis]->GetSlicerPositionAsIndex();
+
+	//		xPos = (xCurrentImageNumber*out_dim[0]) / in_dim[0];
+	//		yPos = (yCurrentImageNumber*out_dim[1]) / in_dim[1];
+	//	}
+	//		break;
+	//	case RTViewer::CoronalAxis:
+	//	{
+	//		int xCurrentImageNumber = d->m_slicers[(int)SagittalAxis]->GetSlicerPositionAsIndex();
+
+	//		int yCurrentImageNumber = d->m_slicers[(int)AxialAxis]->GetSlicerPositionAsIndex();
+
+	//		xPos = (xCurrentImageNumber*out_dim[0]) / in_dim[0];
+	//		yPos = (yCurrentImageNumber*out_dim[1]) / in_dim[2];
+
+	//		
+	//	}
+	//		break;
+	//	case RTViewer::SagittalAxis:
+	//	{
+	//		int xCurrentImageNumber = d->m_slicers[(int)CoronalAxis]->GetSlicerPositionAsIndex();
+
+	//		int yCurrentImageNumber = d->m_slicers[(int)AxialAxis]->GetSlicerPositionAsIndex();
+
+	//		xPos = (xCurrentImageNumber*out_dim[0]) / in_dim[1];
+	//		yPos = (yCurrentImageNumber*out_dim[1]) / in_dim[2];
+
+	//	}
+	//		break;
+	//	default:
+	//		break;
+	//}
 
 
 	//double pos = 0;
@@ -572,7 +721,7 @@ void MPR::GetCurrentSlicerPositionRelativeToIndex(Axis axis, int& xPos, int& yPo
 	//		break;
 	//}
 	//return fabs(pos);
-}
+
 
 void MPR::GetOutputImageDisplayDimensions(Axis axis, int& width, int& height)
 {
@@ -659,7 +808,7 @@ void MPR::GetXYZPixelSpacing(int axis, double* spacing)
 {
 
 	d->m_slicers[axis]->GetRawOutputImage()->GetSpacing(spacing);
-	RAD_LOG_CRITICAL("<abhishek> Axis:" << axis <<  " Sx:"<<spacing[0] << " Sy:"<<spacing[1] << "Sz:" << spacing[2]);
+	//RAD_LOG_CRITICAL("<abhishek> Axis:" << axis <<  " Sx:"<<spacing[0] << " Sy:"<<spacing[1] << "Sz:" << spacing[2]);
 }
 double MPR::GetPixelSpacing(int axis)
 {
@@ -698,19 +847,39 @@ void MPR::RotateAxesAlongPlane(int axis, int angle)
 	{	
 		case AxialAxis:
 		{
-			d->m_slicers[SagittalAxis]->RotateY(angle*-1);
-			//d->m_slicers[CoronalAxis]->RotateY(angle*-1);
+			// rotate sagittal
+			d->m_cursorTransform->RotateX(angle);
+			//rotate coronal
+			d->m_cursorTransform->RotateY(angle);
+
+			//d->m_slicers[SagittalAxis]->GetTransform()->RotateX(angle);
+			//d->m_slicers[CoronalAxis]->GetTransform()->RotateY(angle);
+			//d->m_cursorTransform->RotateX(angle);
+			//d->m_cursorTransform->RotateZ(angle);
 		}
 			break;
 		case CoronalAxis:
+		{
+			// rotate sagittal
+			d->m_cursorTransform->RotateX(angle);
+			// rotate axial
+			d->m_cursorTransform->RotateZ(angle);
+
+			//d->m_slicers[SagittalAxis]->GetTransform()->RotateX(angle);
+			//d->m_slicers[AxialAxis]->GetTransform()->RotateZ(angle*);
+		}
 			break;
 		case SagittalAxis:
 		{
-			d->m_slicers[AxialAxis]->RotateY(angle*-1);
-			d->m_slicers[CoronalAxis]->RotateX(angle*-1);
+			// rotate axial
+			d->m_cursorTransform->RotateZ(angle);
+			// rotate coronal
+			d->m_cursorTransform->RotateY(angle);
+
+			//d->m_slicers[AxialAxis]->GetTransform()->RotateY(angle);
+			//d->m_slicers[CoronalAxis]->GetTransform()->RotateZ(angle);
 		}
 			break;
-
 		default:
 			break;
 	}

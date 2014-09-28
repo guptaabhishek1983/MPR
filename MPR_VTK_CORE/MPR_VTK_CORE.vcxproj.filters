@@ -30,6 +30,9 @@
     <ClInclude Include="MPROrientation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MPRTransform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MPR.cpp">
@@ -39,6 +42,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MPROrientation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MPRTransform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

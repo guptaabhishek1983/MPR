@@ -243,9 +243,10 @@ namespace MPR_UI
             Point p = this.GetOriginalCoords(new Point(e.X, e.Y));
             if (e.Button == System.Windows.Forms.MouseButtons.Left && MPRCursorSelected == true) 
             {
-                
-                //Point pDiff = new Point(e.X - lastMousePositionORG.X, e.Y - lastMousePositionORG.Y);
-                EVT_MPRCursorTranslated(new Point((int)(p.X*XPixelSpacing), (int)(p.Y*YPixelSpacing)));
+
+                Point pDiff = new Point((int)(p.X * XPixelSpacing - lastMousePosition.X * XPixelSpacing), (int)(p.Y * YPixelSpacing - lastMousePosition.Y * YPixelSpacing));
+                EVT_MPRCursorTranslated(pDiff);
+                //EVT_MPRCursorTranslated(new Point((int)(p.X*XPixelSpacing), (int)(p.Y*YPixelSpacing)));
             }
 
             

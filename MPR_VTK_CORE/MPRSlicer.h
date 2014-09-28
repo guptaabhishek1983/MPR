@@ -8,11 +8,13 @@
 class vtkMatrix4x4;
 class vtkImageReslice;
 class vtkTransform;
+
 using namespace std;
 namespace RTViewer
 {
 	// forward declaration;
 	class MPR;
+	class MPRTransform;
 	class MPRSlicer
 	{
 		protected:
@@ -27,7 +29,7 @@ namespace RTViewer
 				this->m_inputImage->GetDimensions(m_dimension);
 			}
 			void InitSlicer();
-			void InitSlicer(vtkSmartPointer<vtkMatrix4x4> orientation_matrix);
+			void InitSlicer(vtkSmartPointer<vtkMatrix4x4> orientation_matrix, MPRTransform* mpr_transform);
 			//void SetResliceMatrix(vtkSmartPointer<vtkMatrix4x4> matrix){this->m_resliceMatrix = matrix;}
 			void SetReslicePosition(double point[3]);
 			image GetOutputImage();
@@ -41,6 +43,7 @@ namespace RTViewer
 			string GetOrientationMarkers_B(){ return this->m_orientatationMarkers_B; }
 			long int GetPixelIntensity(int x_pos, int y_pos);
 			vtkSmartPointer<vtkImageData> GetRawOutputImage();
+			vtkMatrix4x4* GetResliceAxes();
 			void SetVOI_LUTParameters(double ww, double wl, double rs, double ri)
 			{
 				this->m_ww = ww;
@@ -49,9 +52,11 @@ namespace RTViewer
 				this->m_ri = ri;
 			}
 
-			void RotateX(int angle);
+			/*void RotateX(int angle);
 			void RotateY(int angle);
-			void RotateZ(int angle);
+			void RotateZ(int angle);*/
+			vtkSmartPointer<vtkTransform> GetTransform(){ return m_transform; }
+
 	protected: // methods
 		void ComputeOrientationMarkers();
 

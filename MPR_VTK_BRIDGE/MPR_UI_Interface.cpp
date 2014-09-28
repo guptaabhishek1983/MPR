@@ -69,6 +69,12 @@ BitmapWrapper^ MPR_UI_Interface::GetDisplayImage(int axis)
 	int newWidth, newHeight;
 	//this->m_mpr->GetOutputImageDisplayDimensions((Axis)axis, newWidth, newHeight);
 	//bmp->Resize(newWidth, newHeight);
+	if (m_updateImage != nullptr)
+	{
+		double xPos = 0, yPos = 0;
+		this->m_mpr->GetCurrentSlicerPositionRelativeToIndex((Axis)axis, xPos, yPos);
+		EVT_UpdateImage(bmp, axis, xPos, yPos);
+	}
 	return bmp;
 }
 
@@ -93,7 +99,7 @@ double MPR_UI_Interface::GetCurrentImagePosition(int axis)
 
 void MPR_UI_Interface::GetCurrentSlicerPositionRelativeToIndex(int axis, int* pos)
 {
-	int xPos = 0, yPos = 0;
+	double xPos = 0, yPos = 0;
 	this->m_mpr->GetCurrentSlicerPositionRelativeToIndex((Axis)axis,xPos, yPos);
 	pos[0] = xPos;
 	pos[1] = yPos;
@@ -101,53 +107,55 @@ void MPR_UI_Interface::GetCurrentSlicerPositionRelativeToIndex(int axis, int* po
 
 void MPR_UI_Interface::UpdateSlicerPosition(int axis, float x, float y)
 {
-	switch ((Axis)axis)
-	{
-		case AxialAxis:
-		{
-			this->m_mpr->Scroll2(Axis::SagittalAxis, x);
-			this->m_mpr->Scroll2(Axis::CoronalAxis, y);
+	this->m_mpr->Scroll2((Axis)axis, x, y);
+	BitmapWrapper^ sagittal_bmp = GetDisplayImage((int)Axis::SagittalAxis);
+	BitmapWrapper^ coronal_bmp = GetDisplayImage((int)Axis::CoronalAxis);
+	BitmapWrapper^ axial_bmp = GetDisplayImage((int)Axis::AxialAxis);
 
-			BitmapWrapper^ sagittal_bmp = GetDisplayImage((int)Axis::SagittalAxis);
-			BitmapWrapper^ coronal_bmp = GetDisplayImage((int)Axis::CoronalAxis);
-			if (m_updateImage != nullptr)
-			{
-				EVT_UpdateImage(sagittal_bmp, Axis::SagittalAxis, 0, 0);
-				EVT_UpdateImage(coronal_bmp, Axis::CoronalAxis, 0, 0);
-			}
-		}
-			break;
-		case SagittalAxis:
-		{
-			this->m_mpr->Scroll2(Axis::CoronalAxis, x);
-			this->m_mpr->Scroll2(Axis::AxialAxis, y);
+	//switch ((Axis)axis)
+	//{
+	//	case AxialAxis:
+	//	{
+	//		BitmapWrapper^ sagittal_bmp = GetDisplayImage((int)Axis::SagittalAxis);
+	//		BitmapWrapper^ coronal_bmp = GetDisplayImage((int)Axis::CoronalAxis);
+	//		/*if (m_updateImage != nullptr)
+	//		{
+	//			EVT_UpdateImage(sagittal_bmp, Axis::SagittalAxis, pos[0], pos[1]);
+	//			EVT_UpdateImage(coronal_bmp, Axis::CoronalAxis, pos[0], pos[1]);
+	//		}*/
+	//	}
+	//		break;
+	//	case SagittalAxis:
+	//	{
+	//		/*this->m_mpr->Scroll2(Axis::CoronalAxis, x);
+	//		this->m_mpr->Scroll2(Axis::AxialAxis, y);*/
 
-			BitmapWrapper^ axial_bmp = GetDisplayImage((int)Axis::AxialAxis);
-			BitmapWrapper^ coronal_bmp = GetDisplayImage((int)Axis::CoronalAxis);
-			if (m_updateImage != nullptr)
-			{
-				EVT_UpdateImage(axial_bmp, Axis::AxialAxis, 0, 0);
-				EVT_UpdateImage(coronal_bmp, Axis::CoronalAxis, 0, 0);
-			}
-		}
-			break;
-		case CoronalAxis:
-		{
-			this->m_mpr->Scroll2(Axis::SagittalAxis , x);
-			this->m_mpr->Scroll2(Axis::AxialAxis, y);
+	//		BitmapWrapper^ axial_bmp = GetDisplayImage((int)Axis::AxialAxis);
+	//		BitmapWrapper^ coronal_bmp = GetDisplayImage((int)Axis::CoronalAxis);
+	//		/*if (m_updateImage != nullptr)
+	//		{
+	//			EVT_UpdateImage(axial_bmp, Axis::AxialAxis, pos[0], pos[1]);
+	//			EVT_UpdateImage(coronal_bmp, Axis::CoronalAxis, pos[0], pos[1]);
+	//		}*/
+	//	}
+	//		break;
+	//	case CoronalAxis:
+	//	{
+	//		/*this->m_mpr->Scroll2(Axis::SagittalAxis , x);
+	//		this->m_mpr->Scroll2(Axis::AxialAxis, y);*/
 
-			BitmapWrapper^ sagittal_bmp = GetDisplayImage((int)Axis::SagittalAxis);
-			BitmapWrapper^ axial_bmp = GetDisplayImage((int)Axis::AxialAxis);
-			if (m_updateImage != nullptr)
-			{
-				EVT_UpdateImage(sagittal_bmp, Axis::SagittalAxis, 0, 0);
-				EVT_UpdateImage(axial_bmp, Axis::AxialAxis, 0, 0);
-			}
-		}
-			break;
-		default:
-			break;
-	}
+	//		BitmapWrapper^ sagittal_bmp = GetDisplayImage((int)Axis::SagittalAxis);
+	//		BitmapWrapper^ axial_bmp = GetDisplayImage((int)Axis::AxialAxis);
+	//		/*if (m_updateImage != nullptr)
+	//		{
+	//			EVT_UpdateImage(sagittal_bmp, Axis::SagittalAxis, pos[0], pos[1]);
+	//			EVT_UpdateImage(axial_bmp, Axis::AxialAxis, pos[0], pos[1]);
+	//		}*/
+	//	}
+	//		break;
+	//	default:
+	//		break;
+	//}
 }
 
 String^ MPR_UI_Interface::GetOrientationMarkerLeft(int axis)
@@ -183,6 +191,49 @@ long int MPR_UI_Interface::GetPixelIntensity(int axis, int x_pos, int y_pos)
 void MPR_UI_Interface::RotateAxesAlongPlane(int axis, int angle)
 {
 	this->m_mpr->RotateAxesAlongPlane(axis, angle);
+	BitmapWrapper^ sagittal_bmp = GetDisplayImage((int)Axis::SagittalAxis);
+
+	BitmapWrapper^ coronal_bmp = GetDisplayImage((int)Axis::CoronalAxis);
+	BitmapWrapper^ axial_bmp = GetDisplayImage((int)Axis::AxialAxis);
+	//switch (axis)	
+	//{
+	//	case AxialAxis:
+	//	{
+	//		BitmapWrapper^ sagittal_bmp = GetDisplayImage((int)Axis::SagittalAxis);
+	//		
+	//		BitmapWrapper^ coronal_bmp = GetDisplayImage((int)Axis::CoronalAxis);
+	//		/*if (m_updateImage != nullptr)
+	//		{
+	//			EVT_UpdateImage(sagittal_bmp, Axis::SagittalAxis, 0, 0);
+	//			EVT_UpdateImage(coronal_bmp, Axis::CoronalAxis, 0, 0);
+	//		}*/
+	//	}
+	//		break;
+	//	case SagittalAxis:
+	//	{
+	//		BitmapWrapper^ axial_bmp = GetDisplayImage((int)Axis::AxialAxis);
+	//		BitmapWrapper^ coronal_bmp = GetDisplayImage((int)Axis::CoronalAxis);
+	//		/*if (m_updateImage != nullptr)
+	//		{
+	//			EVT_UpdateImage(axial_bmp, Axis::AxialAxis, 0, 0);
+	//			EVT_UpdateImage(coronal_bmp, Axis::CoronalAxis, 0, 0);
+	//		}*/
+	//	}
+	//		break;
+	//	case CoronalAxis:
+	//	{
+	//		BitmapWrapper^ sagittal_bmp = GetDisplayImage((int)Axis::SagittalAxis);
+	//		BitmapWrapper^ axial_bmp = GetDisplayImage((int)Axis::AxialAxis);
+	//		/*if (m_updateImage != nullptr)
+	//		{
+	//			EVT_UpdateImage(sagittal_bmp, Axis::SagittalAxis, 0, 0);
+	//			EVT_UpdateImage(axial_bmp, Axis::AxialAxis, 0, 0);
+	//		}*/
+	//	}
+	//		break;
+	//	default:
+	//		break;
+	//}
 }
 
 // static methods

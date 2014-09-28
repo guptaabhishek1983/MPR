@@ -20,11 +20,11 @@ namespace RTViewer
 		void initFromImage(vtkSmartPointer<vtkImageData> image);
 		image GetOutputImage(Axis axis);
 		void Scroll(Axis axis, int delta);
-		void Scroll2(Axis axis, float newPosition);
+		void Scroll2(Axis axis, float dx, float dy);
 		int GetNumberOfImages(Axis axis);
 		int GetCurrentImageIndex(Axis axis);
 		double GetCurrentImagePosition(Axis axis);
-		void GetCurrentSlicerPositionRelativeToIndex(Axis axis, int& xPos, int& yPos);
+		void GetCurrentSlicerPositionRelativeToIndex(Axis axis, double& xPos, double& yPos);
 		void GetOutputImageDisplayDimensions(Axis axis, int& width, int& height);
 		string GetOrientationMarkerLeft(Axis axis);
 		string GetOrientationMarkerRight(Axis axis);
