@@ -5,7 +5,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using ImageUtils;
 using MPR_UI.Properties;
@@ -42,7 +44,8 @@ namespace MPR_UI
         Point objectLocation;
         bool objectSelected;
 
-        
+        private object lockobj;
+
         public ImagePanel2()
         {
             InitializeComponent();
@@ -82,8 +85,11 @@ namespace MPR_UI
             SetStyle(ControlStyles.DoubleBuffer, true);
             SetStyle(ControlStyles.UserMouse, true);
 
+            lockobj = new object();
             // handle resize
             this.Resize += new EventHandler(ImagePanel2_Resize);
+
+            
         }
 
         /// <summary>
@@ -150,14 +156,20 @@ namespace MPR_UI
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
-            if(e.Delta>1)
+            var imgControl = this.Parent.Parent as ImageControl;
+            if (e.Delta >= 1)
             {
-
+                imgControl.StackScrolled(1);
             }
             else
             {
-
+                imgControl.StackScrolled(-1);
             }
+        }
+
+        private void RaiseStackToolCoarseChanged(int p1, int p2)
+        {
+            throw new NotImplementedException();
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -284,10 +296,25 @@ namespace MPR_UI
 
             e.Graphics.DrawImage(StoreBitmap, e.ClipRectangle, srcRect, GraphicsUnit.Pixel);
 
+            if (DoseBitmap != null)
+            {
+
+                PointF doseDisplayPosition1 = this.GetActualDisplayPosition(DosePosition);
+                RectangleF doseRect = new RectangleF(doseDisplayPosition1, new SizeF(this.DoseBitmap.Width * this.currentZoomFactor,
+                    this.DoseBitmap.Height * this.currentZoomFactor));
+#if DEBUG
+                e.Graphics.DrawRectangle(new Pen(Color.Blue), doseDisplayPosition1.X, doseDisplayPosition1.Y, DoseBitmap.Width, DoseBitmap.Height);
+#endif
+                e.Graphics.DrawImage(this.DoseBitmap, doseRect);
+
+            }
+
             e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             Pen p = new Pen(Color.Gold, 10.0F);
             e.Graphics.FillPath(p.Brush, objectPath);
+
+
 
             Pen _pen1 = new Pen(Color.LightGoldenrodYellow, 2.0F);
             Pen _pen2 = new Pen(Color.ForestGreen, 2.0F);
@@ -296,9 +323,9 @@ namespace MPR_UI
             int currX = spacing;
             int currY = 4 + spacing;
             SizeF sz = new SizeF(0F, 0F);
-            if (this.Parent.Parent.Name.CompareTo("ImageControl") == 0)
+            if (this.Parent.Parent.Parent.Parent.Name.CompareTo("ImageControl") == 0)
             {
-                var imgControl = (ImageControl)this.Parent.Parent;
+                var imgControl = (ImageControl)this.Parent.Parent.Parent.Parent;
                 int idx = imgControl.GetScrollbarValue();
 
                 StringBuilder _sb = new StringBuilder();
@@ -322,15 +349,29 @@ namespace MPR_UI
                 e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(currX, currY));
                 currY = currY + (int)sz.Height + spacing;
 
+                _sb.Clear();
+                _sb.Append("Dose idx#");
+                _sb.Append(imgControl.DoseIndex);
+                sz = e.Graphics.MeasureString(_sb.ToString(), _font);
+                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(currX, currY));
+                currY = currY + (int)sz.Height + spacing;
+
+                _sb.Clear();
+                _sb.Append("Dose Pos#");
+                _sb.Append(imgControl.DosePosition);
+                sz = e.Graphics.MeasureString(_sb.ToString(), _font);
+                e.Graphics.DrawString(_sb.ToString(), _font, _pen1.Brush, new PointF(currX, currY));
+                currY = currY + (int)sz.Height + spacing;
+
                 
                 
             }
 
             // paint bottom left
             currY = this.Height - 10 - spacing;
-            if (this.Parent.Parent.Name.CompareTo("ImageControl") == 0)
+            if (this.Parent.Parent.Parent.Parent.Name.CompareTo("ImageControl") == 0)
             {
-                var imgControl = (ImageControl)this.Parent.Parent;
+                var imgControl = (ImageControl)this.Parent.Parent.Parent.Parent;
 
                 StringBuilder _sb = new StringBuilder();
                 _sb.Clear();
@@ -376,12 +417,102 @@ namespace MPR_UI
 
             // paint side marker
             {
-                var imgControl = (ImageControl)this.Parent.Parent;
+                var imgControl = (ImageControl)this.Parent.Parent.Parent.Parent;
+                // draw on right-middle side of view
                 e.Graphics.DrawString(imgControl.OrientationMarkerLeft, _font, _pen2.Brush, new PointF(this.Width - 20, this.Height / 2));
+                // draw on left-middle side of view
                 e.Graphics.DrawString(imgControl.OrientationMarkerRight, _font, _pen2.Brush, new PointF(0, this.Height / 2));
+                // draw on top-middle side
                 e.Graphics.DrawString(imgControl.OrientationMarkerTop, _font, _pen2.Brush, new PointF(this.Width / 2, 0));
+
+                // draw on bottom-middle
                 e.Graphics.DrawString(imgControl.OrientationMarkerBottom, _font, _pen2.Brush, new PointF(this.Width / 2, this.Height - 20));
             }
+            Monitor.Enter(lockobj);
+            try
+            {
+                var imgControl = (ImageControl)this.Parent.Parent.Parent.Parent;
+                foreach (KeyValuePair<int, Dictionary<int, List<PointF>>> kvp in imgControl.RoiPoints)
+                {
+                    int roiNumber = kvp.Key;
+                    Color c = imgControl.RoiColor.ContainsKey(kvp.Key) ? imgControl.RoiColor[kvp.Key]: Color.Red;
+
+                    Pen pen;
+                    pen = new Pen(c, 1.0F);
+                    try
+                    {
+                        Dictionary<int, List<PointF>> lineSegments = kvp.Value;
+                        GraphicsPath path = new GraphicsPath();
+                        int count = 0;
+                        foreach (KeyValuePair<int, List<PointF>> lineSegment in lineSegments)
+                        {
+                            count++;
+
+                            List<PointF> points = lineSegment.Value as List<PointF>;
+                            PointF[] tr = new PointF[points.Count];
+                            for (int ptIdx = 0; ptIdx < points.Count; ptIdx++)
+                            {
+                                PointF p3 = new PointF((float)(points[ptIdx].X / XPixelSpacing), (float)(points[ptIdx].Y / YPixelSpacing));
+                                PointF ppp = this.GetActualDisplayPosition(new Point((int)Math.Abs(p3.X), (int)Math.Abs(p3.Y)));
+                                tr[ptIdx] = ppp;
+                            }
+                            if (points.Count > 1)
+                            {
+                                path.AddLines(tr);
+                                path.StartFigure();
+                            }
+                        }
+                        e.Graphics.DrawPath(pen, path);
+                    }
+                    catch (KeyNotFoundException ex)
+                    {
+                        MessageBox.Show("Exception occurred");
+                    }
+                }
+
+                foreach (KeyValuePair<int, Dictionary<int, List<PointF>>> kvp in imgControl.DosePoints)
+                {
+                    int roiNumber = kvp.Key;
+                    Color c = imgControl.DoseColor.ContainsKey(kvp.Key) ? imgControl.DoseColor[kvp.Key] : Color.Red;
+
+                    Pen pen;
+                    pen = new Pen(c, 1.0F);
+                    try
+                    {
+                        Dictionary<int, List<PointF>> lineSegments = kvp.Value;
+                        GraphicsPath path = new GraphicsPath();
+                        int count = 0;
+                        foreach (KeyValuePair<int, List<PointF>> lineSegment in lineSegments)
+                        {
+                            count++;
+
+                            List<PointF> points = lineSegment.Value as List<PointF>;
+                            PointF[] tr = new PointF[points.Count];
+                            for (int ptIdx = 0; ptIdx < points.Count; ptIdx++)
+                            {
+                                PointF p3 = new PointF((float)(points[ptIdx].X / XPixelSpacing), (float)(points[ptIdx].Y / YPixelSpacing));
+                                PointF ppp = this.GetActualDisplayPosition(new Point((int)Math.Abs(p3.X), (int)Math.Abs(p3.Y)));
+                                tr[ptIdx] = ppp;
+                            }
+                            if (points.Count > 1)
+                            {
+                                path.AddLines(tr);
+                                path.StartFigure();
+                            }
+                        }
+                        e.Graphics.DrawPath(pen, path);
+                    }
+                    catch (KeyNotFoundException ex)
+                    {
+                        MessageBox.Show("Exception occurred");
+                    }
+                }
+            }
+            catch (KeyNotFoundException ex)
+            {
+                MessageBox.Show("Exception occurred");
+            }
+            Monitor.Exit(lockobj);
             base.OnPaint(e);
         }
 
@@ -461,5 +592,58 @@ namespace MPR_UI
         public bool MPRXAxisSelected { get; set; }
 
         public bool MPRYAxisSelected { get; set; }
+
+        internal void UpdateROI(Dictionary<int, Dictionary<int, List<PointF>>> roiPoints, Dictionary<int, Color> roiColor)
+        {
+            Monitor.Enter(lockobj);
+            ROIColor = roiColor;
+            Dictionary<int, GraphicsPath> gp = new Dictionary<int, GraphicsPath>();
+            foreach (KeyValuePair<int, Dictionary<int, List<PointF>>> kvp in roiPoints)
+            {
+                Dictionary<int, List<PointF>> lineSegments = kvp.Value;
+                GraphicsPath path = new GraphicsPath();
+                int count = 0;
+                foreach (KeyValuePair<int, List<PointF>> lineSegment in lineSegments)
+                {
+                    count++;
+
+
+                    List<PointF> points = lineSegment.Value as List<PointF>;
+                    PointF[] tr = new PointF[points.Count];
+                    for (int ptIdx = 0; ptIdx < points.Count; ptIdx++)
+                    {
+                        PointF p3 = new PointF((float)(points[ptIdx].X / XPixelSpacing), (float)(points[ptIdx].Y / YPixelSpacing));
+                        PointF ppp = this.GetActualDisplayPosition(new Point((int)Math.Abs(p3.X), (int)Math.Abs(p3.Y)));
+                        tr[ptIdx] = ppp;// new PointF((float)(this.currentZoomFactor * (ppp.X + this.currentDisplayOffsetPt.X)), (float)(this.currentZoomFactor * (p.Y + this.currentDisplayOffsetPt.Y)));
+                    }
+                    if (points.Count > 1)
+                    {
+                        path.AddLines(tr);
+                        path.StartFigure();
+                    }
+                    else
+                    {
+                        path.AddRectangle(new RectangleF(tr[0].X, tr[0].Y, 1.0F, 1.0F));
+                    }
+                }
+                //path.CloseAllFigures();
+                gp.Add(count, path);
+            }
+            ROIPath = gp;
+            Monitor.Exit(lockobj);
+        }
+
+
+
+
+
+
+        public Dictionary<int, Color> ROIColor { get; set; }
+
+        public Dictionary<int, GraphicsPath> ROIPath { get; set; }
+
+        public Bitmap DoseBitmap { get; set; }
+
+        public PointF DosePosition { get; set; }
     }
 }

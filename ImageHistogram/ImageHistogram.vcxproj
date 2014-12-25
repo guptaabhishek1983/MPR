@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E7679125-1891-426E-A6F4-50C2A0C5D4DF}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ImageHistogram</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\MPR_VTK_Core;$(RT_MS_SDK_ROOT)\include\rad_utils\2.0.0;$(RT_MS_SDK_ROOT)\include\rt_dicom_util\1.0.0;$(RT_MS_SDK_ROOT)\include\dcmtk\3.6.0.3\include;$(RT_MS_SDK_ROOT)\include\vtk\6.1.0;$(RT_MS_SDK_ROOT)\include\InstaRT;$(RT_MS_SDK_ROOT)\include\bcl\1.0.0;..\MPR_VTK_Core\RT_StructureSet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\MPRViewer\Debug;$(RT_MS_SDK_ROOT)\lib\Debug\vtk\6.1.0\lib;$(RT_MS_SDK_ROOT)\lib\Debug\rad_utils\2.0.0;$(RT_MS_SDK_ROOT)\lib\Debug\rt_dicom_util\1.0.0;$(RT_MS_SDK_ROOT)\lib\Debug\dcmtk\3.6.0.3;$(RT_MS_SDK_ROOT)\lib\Debug\InstaRT;$(RT_MS_SDK_ROOT)\lib\Debug\bcl\1.0.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Advapi32.lib;WS2_32.lib;NetAPI32.lib;rad_utilD.lib;bclD.lib;RTDicomUtilD.lib;rad_streaming_encodeD.lib;dcmdataD.lib;ijg8D.lib;ijg12D.lib;ijg16D.lib;dcmimageD.lib;dcmimgleD.lib;dcmjpegD.lib;dcmnetD.lib;ofstdD.lib;oflogD.lib;vtkCommonCore-6.1D.lib;vtkImagingCore-6.1D.lib;vtkImagingColor-6.1D.lib;vtkCommonExecutionModel-6.1D.lib;vtkCommonDataModel-6.1D.lib;vtkalglib-6.1D.lib;vtkmetaio-6.1D.lib;vtkIOCore-6.1D.lib;vtkIOLegacy-6.1D.lib;vtkIOImage-6.1D.lib;vtkImagingSources-6.1D.lib;vtkFiltersCore-6.1D.lib;vtkFiltersGeneral-6.1D.lib;vtkCommonTransforms-6.1D.lib;vtkCommonMath-6.1D.lib;vtkDICOMParser-6.1D.lib;vtkImagingStencil-6.1D.lib;vtkImagingStatistics-6.1D.lib;vtkInteractionStyle-6.1D.lib;vtkRenderingFreeType-6.1D.lib;vtkRenderingFreeTypeOpenGL-6.1D.lib;vtkftgl-6.1D.lib;vtkfreetype-6.1D.lib;vtkRenderingOpenGL-6.1D.lib;vtkRenderingAnnotation-6.1D.lib;vtkRenderingCore-6.1D.lib;MPR_VTK_Core_D.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\MPR_VTK_Core;$(RT_MS_SDK_ROOT)\include\rad_utils\2.0.0;$(RT_MS_SDK_ROOT)\include\rt_dicom_util\1.0.0;$(RT_MS_SDK_ROOT)\include\dcmtk\3.6.0.3\include;$(RT_MS_SDK_ROOT)\include\vtk\6.1.0;$(RT_MS_SDK_ROOT)\include\InstaRT;$(RT_MS_SDK_ROOT)\include\bcl\1.0.0;..\MPR_VTK_Core\RT-StructureSet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>..\MPRViewer\Release;$(RT_MS_SDK_ROOT)\lib\Release\vtk\6.1.0\lib;$(RT_MS_SDK_ROOT)\lib\Release\rad_utils\2.0.0;$(RT_MS_SDK_ROOT)\lib\Release\rt_dicom_util\1.0.0;$(RT_MS_SDK_ROOT)\lib\Release\dcmtk\3.6.0.3;$(RT_MS_SDK_ROOT)\lib\Release\InstaRT;$(RT_MS_SDK_ROOT)\lib\Release\bcl\1.0.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Advapi32.lib;WS2_32.lib;NetAPI32.lib;rad_util.lib;bcl.lib;RTDicomUtil.lib;rad_streaming_encode.lib;dcmdata.lib;ijg8.lib;ijg12.lib;ijg16.lib;dcmimage.lib;dcmimgle.lib;dcmjpeg.lib;dcmnet.lib;ofstd.lib;oflog.lib;vtkCommonCore-6.1.lib;vtkImagingCore-6.1.lib;vtkImagingColor-6.1.lib;vtkCommonExecutionModel-6.1.lib;vtkCommonDataModel-6.1.lib;vtkalglib-6.1.lib;vtkmetaio-6.1.lib;vtkIOCore-6.1.lib;vtkIOLegacy-6.1.lib;vtkIOImage-6.1.lib;vtkImagingSources-6.1.lib;vtkFiltersCore-6.1.lib;vtkFiltersGeneral-6.1.lib;vtkCommonTransforms-6.1.lib;vtkCommonMath-6.1.lib;vtkDICOMParser-6.1.lib;vtkImagingStencil-6.1.lib;vtkImagingStatistics-6.1.lib;vtkInteractionStyle-6.1.lib;vtkRenderingFreeType-6.1.lib;vtkRenderingFreeTypeOpenGL-6.1.lib;vtkftgl-6.1.lib;vtkfreetype-6.1.lib;vtkRenderingOpenGL-6.1.lib;vtkRenderingAnnotation-6.1.lib;vtkRenderingCore-6.1.lib;MPR_VTK_Core.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ImageHistogram.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

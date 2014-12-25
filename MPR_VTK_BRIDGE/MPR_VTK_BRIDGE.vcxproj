@@ -29,7 +29,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CLRSupport>true</CLRSupport>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -55,11 +55,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\MPR_VTK_Core;$(RT_MS_SDK_ROOT)\include\rad_utils\2.0.0;$(RT_MS_SDK_ROOT)\include\rt_dicom_util\1.0.0;$(RT_MS_SDK_ROOT)\include\dcmtk\3.6.0.3\include;$(RT_MS_SDK_ROOT)\include\vtk\6.1.0;$(RT_MS_SDK_ROOT)\include\InstaRT;$(RT_MS_SDK_ROOT)\include\bcl\1.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\MPR_VTK_Core;$(RT_MS_SDK_ROOT)\include\rad_utils\2.0.0;$(RT_MS_SDK_ROOT)\include\rt_dicom_util\1.0.0;$(RT_MS_SDK_ROOT)\include\dcmtk\3.6.0.3\include;$(RT_MS_SDK_ROOT)\include\vtk\6.1.0;$(RT_MS_SDK_ROOT)\include\InstaRT;$(RT_MS_SDK_ROOT)\include\bcl\1.0.0;..\MPR_VTK_Core\RT_StructureSet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Advapi32.lib;WS2_32.lib;NetAPI32.lib;rad_utilD.lib;bclD.lib;RTDicomUtilD.lib;rad_streaming_encodeD.lib;dcmdataD.lib;ijg8D.lib;ijg12D.lib;ijg16D.lib;dcmimageD.lib;dcmimgleD.lib;dcmjpegD.lib;dcmnetD.lib;ofstdD.lib;oflogD.lib;vtkCommonCore-6.1D.lib;vtkImagingCore-6.1D.lib;vtkImagingColor-6.1D.lib;vtkCommonExecutionModel-6.1D.lib;vtkCommonDataModel-6.1D.lib;vtkalglib-6.1D.lib;vtkmetaio-6.1D.lib;vtkIOCore-6.1D.lib;vtkIOLegacy-6.1D.lib;vtkIOImage-6.1D.lib;vtkImagingSources-6.1D.lib;vtkFiltersCore-6.1D.lib;vtkCommonTransforms-6.1D.lib;vtkCommonMath-6.1D.lib;vtkDICOMParser-6.1D.lib;MPR_VTK_Core_D.lib</AdditionalDependencies>
+      <AdditionalDependencies>Advapi32.lib;WS2_32.lib;NetAPI32.lib;rad_utilD.lib;bclD.lib;RTDicomUtilD.lib;rad_streaming_encodeD.lib;dcmdataD.lib;ijg8D.lib;ijg12D.lib;ijg16D.lib;dcmimageD.lib;dcmimgleD.lib;dcmjpegD.lib;dcmnetD.lib;ofstdD.lib;oflogD.lib;vtkCommonCore-6.1D.lib;vtkImagingCore-6.1D.lib;vtkImagingColor-6.1D.lib;vtkCommonExecutionModel-6.1D.lib;vtkCommonDataModel-6.1D.lib;vtkalglib-6.1D.lib;vtkmetaio-6.1D.lib;vtkIOCore-6.1D.lib;vtkIOLegacy-6.1D.lib;vtkIOImage-6.1D.lib;vtkImagingSources-6.1D.lib;vtkFiltersCore-6.1D.lib;vtkFiltersGeneral-6.1D.lib;vtkCommonTransforms-6.1D.lib;vtkCommonMath-6.1D.lib;vtkDICOMParser-6.1D.lib;vtkImagingStencil-6.1D.lib;vtkImagingStatistics-6.1D.lib;MPR_VTK_Core_D.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\MPRViewer\Debug;$(RT_MS_SDK_ROOT)\lib\Debug\vtk\6.1.0\lib;$(RT_MS_SDK_ROOT)\lib\Debug\rad_utils\2.0.0;$(RT_MS_SDK_ROOT)\lib\Debug\rt_dicom_util\1.0.0;$(RT_MS_SDK_ROOT)\lib\Debug\dcmtk\3.6.0.3;$(RT_MS_SDK_ROOT)\lib\Debug\InstaRT;$(RT_MS_SDK_ROOT)\lib\Debug\bcl\1.0.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -70,7 +71,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\MPR_VTK_Core;$(RT_MS_SDK_ROOT)\include\rad_utils\2.0.0;$(RT_MS_SDK_ROOT)\include\rt_dicom_util\1.0.0;$(RT_MS_SDK_ROOT)\include\dcmtk\3.6.0.3\include;$(RT_MS_SDK_ROOT)\include\vtk\6.1.0;$(RT_MS_SDK_ROOT)\include\InstaRT;$(RT_MS_SDK_ROOT)\include\bcl\1.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\MPR_VTK_Core;$(RT_MS_SDK_ROOT)\include\rad_utils\2.0.0;$(RT_MS_SDK_ROOT)\include\rt_dicom_util\1.0.0;$(RT_MS_SDK_ROOT)\include\dcmtk\3.6.0.3\include;$(RT_MS_SDK_ROOT)\include\vtk\6.1.0;$(RT_MS_SDK_ROOT)\include\InstaRT;$(RT_MS_SDK_ROOT)\include\bcl\1.0.0;..\MPR_VTK_Core\RT-StructureSet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <Link>
@@ -82,6 +83,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +112,9 @@
   <ItemGroup>
     <ProjectReference Include="..\ImageUtils\ImageUtils.csproj">
       <Project>{a09cb6bf-af08-4830-9480-8ea80fa0f685}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\MPRViewer\EventHandling\EventHandling.csproj">
+      <Project>{cda8476a-80ff-48fd-83fe-e6ee96f59f95}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -54,6 +54,7 @@ namespace ImageUtils
         int width;
         BitmapData bitmapData = null;
         Byte* pBase = null;
+        private const int bytesPerPixel = 4;
 
         #region Constructor and destructor
         public BitmapWrapper()
@@ -378,6 +379,77 @@ namespace ImageUtils
             #endregion
         }
 
+        public void Resize(int newWidth, int newHeight)
+        {
+            Bitmap result = new Bitmap(newWidth, newHeight);
+            using (Graphics g = Graphics.FromImage(result))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.DrawImage(this.StoredBitmap, 0, 0, newWidth, newHeight);
+                this.bitmap = result;
+            }
+            return;
+
+        }
+        public void ChangeImageOpacity(float opacityLevel)
+        {
+            if ((this.bitmap.PixelFormat & PixelFormat.Indexed) == PixelFormat.Indexed)
+            {
+                // Cannot modify an image with indexed colors
+                return;
+            }
+
+            Bitmap bmp = (Bitmap)this.bitmap.Clone();
+            // Specify a pixel format.
+            PixelFormat pxf = PixelFormat.Format32bppArgb;
+
+            // Lock the bitmap's bits.
+            Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+            BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadWrite, pxf);
+
+            // Get the address of the first line.
+            IntPtr ptr = bmpData.Scan0;
+            // Declare an array to hold the bytes of the bitmap.
+            // This code is specific to a bitmap with 32 bits per pixels 
+            // (32 bits = 4 bytes, 3 for RGB and 1 byte for alpha).
+            int numBytes = bmp.Width * bmp.Height * bytesPerPixel;
+            byte[] argbValues = new byte[numBytes];
+
+            // Copy the ARGB values into the array.
+            System.Runtime.InteropServices.Marshal.Copy(ptr, argbValues, 0, numBytes);
+
+            // Manipulate the bitmap, such as changing the
+            // RGB values for all pixels in the the bitmap.
+            for (int counter = 0; counter < argbValues.Length; counter += bytesPerPixel)
+            {
+                // argbValues is in format BGRA (Blue, Green, Red, Alpha)
+
+                // If 100% transparent, skip pixel
+                if (argbValues[counter + bytesPerPixel - 1] == 0)
+                    continue;
+
+                int pos = 0;
+                pos++; // B value
+                pos++; // G value
+                pos++; // R value
+
+                argbValues[counter + pos] = (byte)(argbValues[counter + pos] * opacityLevel);
+            }
+
+            // Copy the ARGB values back to the bitmap
+            System.Runtime.InteropServices.Marshal.Copy(argbValues, 0, ptr, numBytes);
+            
+            this.bitmap.Dispose();
+            // Unlock the bits
+            bmp.UnlockBits(bmpData);
+            bmp.MakeTransparent(bmp.GetPixel(1, 1));
+            this.bitmap = (Bitmap)bmp.Clone();
+            bmp.Dispose();
+            return;
+
+        }
         //public void Resize(int newWidth, int newHeight)
         //{
         //    Bitmap result = new Bitmap(newWidth, newHeight);

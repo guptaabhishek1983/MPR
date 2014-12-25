@@ -13,6 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\RT">
+      <UniqueIdentifier>{faec1525-e072-4f06-8cf8-c84f05439d50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\RT">
+      <UniqueIdentifier>{ba529d76-95fb-4db8-94e1-360d9b604c15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Dose">
+      <UniqueIdentifier>{b03d03e5-509b-4319-a19b-c07297b52c3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Dose">
+      <UniqueIdentifier>{ea70d0a6-1ab4-4308-b719-185fde073d98}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -33,6 +45,30 @@
     <ClInclude Include="MPRTransform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DCMGeometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dose.h">
+      <Filter>Header Files\Dose</Filter>
+    </ClInclude>
+    <ClInclude Include="DoseMPR.h">
+      <Filter>Header Files\Dose</Filter>
+    </ClInclude>
+    <ClInclude Include="DoseReslicer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DVHComputation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RT_StructureSet\RTSS.h">
+      <Filter>Header Files\RT</Filter>
+    </ClInclude>
+    <ClInclude Include="RT_StructureSet\vtkRTSSMPR.h">
+      <Filter>Header Files\RT</Filter>
+    </ClInclude>
+    <ClInclude Include="RT_StructureSet\vtkTriMeshPlaneCutter.h">
+      <Filter>Header Files\RT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MPR.cpp">
@@ -46,6 +82,30 @@
     </ClCompile>
     <ClCompile Include="MPRTransform.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DCMGeometry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Dose.cpp">
+      <Filter>Source Files\Dose</Filter>
+    </ClCompile>
+    <ClCompile Include="DoseMPR.cpp">
+      <Filter>Source Files\Dose</Filter>
+    </ClCompile>
+    <ClCompile Include="DoseReslicer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DVHComputation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RT_StructureSet\RTSS.cpp">
+      <Filter>Source Files\RT</Filter>
+    </ClCompile>
+    <ClCompile Include="RT_StructureSet\vtkRTSSMPR.cxx">
+      <Filter>Source Files\RT</Filter>
+    </ClCompile>
+    <ClCompile Include="RT_StructureSet\vtkTriMeshPlaneCutter.cxx">
+      <Filter>Source Files\RT</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

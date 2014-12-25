@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="DICOM_DIR" Type="System.String" Scope="User">
-      <Value Profile="(Default)">D:\DicomDataSet\Phenix</Value>
+      <Value Profile="(Default)">D:\DicomDataSet\Sharmila</Value>
     </Setting>
     <Setting Name="AxialColor" Type="System.Drawing.Color" Scope="User">
       <Value Profile="(Default)">Tomato</Value>
