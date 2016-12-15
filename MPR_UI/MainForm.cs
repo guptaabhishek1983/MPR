@@ -18,7 +18,6 @@ namespace MPR_UI
         private ImageControl axialImage;
         private ImageControl coronalImage;
         private ImageControl sagittalImage;
-        private DVHControl dvhControl;
 
         private TableLayoutPanel tableLayout1x1;
         private TableLayoutPanel tableLayout2x2;
@@ -33,8 +32,6 @@ namespace MPR_UI
             sagittalImage.Dock = DockStyle.Fill;
             coronalImage = new ImageControl(Axis.CoronalAxis);
             coronalImage.Dock = DockStyle.Fill;
-            dvhControl = new DVHControl();
-            dvhControl.Dock = DockStyle.Fill;
 
             this.tableLayout1x1 = new TableLayoutPanel();
             this.tableLayout1x1.Dock = DockStyle.Fill;
@@ -85,10 +82,6 @@ namespace MPR_UI
 
             
             tableLayout2x2.Controls.Add(coronalImage, 0, 1);
-
-           
-            tableLayout2x2.Controls.Add(dvhControl, 1, 1);
-
 
             tableLayout2x2.ResumeLayout();
         }
