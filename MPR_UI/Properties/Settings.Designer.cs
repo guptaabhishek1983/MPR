@@ -25,18 +25,6 @@ namespace MPR_UI.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("D:\\DicomDataSet\\Sharmila")]
-        public string DICOM_DIR {
-            get {
-                return ((string)(this["DICOM_DIR"]));
-            }
-            set {
-                this["DICOM_DIR"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Tomato")]
         public global::System.Drawing.Color AxialColor {
             get {
@@ -68,6 +56,18 @@ namespace MPR_UI.Properties {
             }
             set {
                 this["SagittalColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("E:\\Workstation-Test-Data\\CT\\Phienix")]
+        public string DICOM_DIR {
+            get {
+                return ((string)(this["DICOM_DIR"]));
+            }
+            set {
+                this["DICOM_DIR"] = value;
             }
         }
     }

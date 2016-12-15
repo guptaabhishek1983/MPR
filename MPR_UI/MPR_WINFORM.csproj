@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MPR_UI</RootNamespace>
     <AssemblyName>MPR_UI</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -23,7 +23,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -34,19 +33,15 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DevExpress.Data.v12.2, Version=12.2.15.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Printing.v12.2.Core, Version=12.2.15.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Utils.v12.2, Version=12.2.15.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data.OracleClient" />
-    <Reference Include="System.Design" />
-    <Reference Include="System.Drawing.Design" />
     <Reference Include="System.Messaging" />
     <Reference Include="System.Runtime.Remoting" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -56,12 +51,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BaseControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="BaseControl.Designer.cs">
-      <DependentUpon>BaseControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="Global.cs" />
     <Compile Include="ImageControl.cs">
       <SubType>UserControl</SubType>
@@ -84,16 +73,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ResizableControl.cs" />
     <Compile Include="Settings.cs" />
-    <EmbeddedResource Include="BaseControl.resx">
-      <DependentUpon>BaseControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="ImageControl.resx">
       <DependentUpon>ImageControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ImagePanel2.resx">
-      <DependentUpon>ImagePanel2.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
@@ -123,10 +105,6 @@
     <ProjectReference Include="..\ImageUtils\ImageUtils.csproj">
       <Project>{a09cb6bf-af08-4830-9480-8ea80fa0f685}</Project>
       <Name>ImageUtils</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MPRViewer\EventHandling\EventHandling.csproj">
-      <Project>{cda8476a-80ff-48fd-83fe-e6ee96f59f95}</Project>
-      <Name>EventHandling</Name>
     </ProjectReference>
     <ProjectReference Include="..\MPR_VTK_BRIDGE\MPR_VTK_BRIDGE.vcxproj">
       <Project>{a9bd5daf-31fd-4a03-ac55-6e9bfb71bb17}</Project>

@@ -8,16 +8,13 @@
 class vtkMatrix4x4;
 class vtkImageReslice;
 class vtkTransform;
-class vtkImageSlabReslice;
-class DCMGeometry;
-#include "MPRTransform.h"
 
 using namespace std;
 namespace RTViewer
 {
 	// forward declaration;
 	class MPR;
-	class Dose;
+	class MPRTransform;
 	class MPRSlicer
 	{
 		protected:
@@ -33,8 +30,6 @@ namespace RTViewer
 			}
 			void InitSlicer();
 			void InitSlicer(vtkSmartPointer<vtkMatrix4x4> orientation_matrix, MPRTransform* mpr_transform);
-
-			void InitSlicer(vtkSmartPointer<DCMGeometry> DCMGeometry, MPRTransform* mpr_transform);
 			//void SetResliceMatrix(vtkSmartPointer<vtkMatrix4x4> matrix){this->m_resliceMatrix = matrix;}
 			void SetReslicePosition(double point[3]);
 			image GetOutputImage();
@@ -68,11 +63,7 @@ namespace RTViewer
 		private:
 			Axis m_axis; // slicer axis
 			vtkSmartPointer<vtkTransform> m_transform; // transform
-#ifdef SLAB_RESLICE
-			vtkSmartPointer<vtkImageSlabReslice> m_reslice; // actual slicer
-#else
 			vtkSmartPointer<vtkImageReslice> m_reslice; // actual slicer
-#endif
 			vtkSmartPointer<vtkMatrix4x4> m_resliceMatrix; // matrix used for slicer orientation & position
 			vtkSmartPointer<vtkImageData> m_inputImage; // input vtkImageData; i.e. image cuboid
 			vtkSmartPointer<vtkImageData> m_outputImage; // output sliced image.
@@ -90,9 +81,6 @@ namespace RTViewer
 			double m_wl;
 			double m_rs;
 			double m_ri;
-
-			
-			friend class MPR;
-			friend class Dose;
+		friend class MPR;
 	};
 }

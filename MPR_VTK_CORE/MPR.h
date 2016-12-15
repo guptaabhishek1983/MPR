@@ -3,18 +3,12 @@
 #include <vector>
 #include "vtkSmartPointer.h"
 #include "vtkImageData.h"
-#include "vtkTransform.h"
-
 #include "enums.h"
 #include "rad_util.h"
 using namespace std;
-
-class DCMGeometry;
-
 namespace RTViewer
 {
 	struct MPRData;
-	class MPRTransform;
 	class MPR
 	{
 	public:
@@ -30,7 +24,6 @@ namespace RTViewer
 		int GetNumberOfImages(Axis axis);
 		int GetCurrentImageIndex(Axis axis);
 		double GetCurrentImagePosition(Axis axis);
-		double GetSlicerPosition(Axis axis);
 		void GetCurrentSlicerPositionRelativeToIndex(Axis axis, double& xPos, double& yPos);
 		void GetOutputImageDisplayDimensions(Axis axis, int& width, int& height);
 		string GetOrientationMarkerLeft(Axis axis);
@@ -43,13 +36,7 @@ namespace RTViewer
 		long int GetPixelIntensity(Axis axis, int x_pos, int y_pos);
 
 		void RotateAxesAlongPlane(int axis, int angle);
-		vtkSmartPointer<vtkImageData> GetInputImage();
-		void GetOrientation(double* x, double* y);
-		void TransformPoint(Axis axis, double* inPos, double* outPos);
-		vtkSmartPointer<vtkTransform> GetTransform(Axis axis);
-		MPRTransform* GetTransform();
 
-		DCMGeometry* GetDCMGeometry();
 	private:
 		MPRData* d;
 	};

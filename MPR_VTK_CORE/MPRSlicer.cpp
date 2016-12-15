@@ -9,7 +9,6 @@
 #include "streaming-image.h"
 // VTK includes
 #include "vtkImageReslice.h"
-#include "vtkImageSlabReslice.h"
 #include "vtkImageData.h"
 #include "vtkSmartPointer.h"
 #include "vtkMatrix4x4.h"
@@ -19,15 +18,12 @@
 
 #include "MPROrientation.h"
 #include "MPRTransform.h"
-#include "DCMGeometry.h"
 
 using namespace RTViewer;
 using namespace std;
 #define __FILENAME__ "MPRSlicer.cpp"
 #undef __MODULENAME__
 #define __MODULENAME__ "MPRSlicer"
-
-//#define LINEAR_INTERPOLATION 1
 
 MPRSlicer::MPRSlicer(Axis axis)
 {
@@ -78,10 +74,6 @@ string calculateOrientation(double vectorX, double vectorY, double vectorZ, doub
 	double absX = fabs(vectorX);
 	double absY = fabs(vectorY);
 	double absZ = fabs(vectorZ);
-
-	/*double absX = abs(vectorX);
-	double absY = abs(vectorY);
-	double absZ = abs(vectorZ);*/
 
 	/*if( absX < 0.7071)
 	absX =0;
@@ -141,7 +133,7 @@ void getOrientationsWrtDCM(vtkSmartPointer<vtkTransform> inTransform, vtkSmartPo
 	
 }
 
-void ReorientSliceToStdOrientation(vtkSmartPointer<vtkTransform> tr, vtkSmartPointer<vtkMatrix4x4> initOrient, int axis)
+void ReorientSliceToStdOrientation(vtkSmartPointer<vtkTransform> tr, vtkSmartPointer<vtkMatrix4x4> initOrient)
 {
 	//
 	// This is a tricky operation.
@@ -174,12 +166,11 @@ void ReorientSliceToStdOrientation(vtkSmartPointer<vtkTransform> tr, vtkSmartPoi
 	//
 
 	getOrientationsWrtDCM(tr, initOrient, x, y, z);
-	
 	string left = calculateOrientation(x[0], x[1], x[2], obliquity);
 	string bottom = calculateOrientation(y[0], y[1], y[2], obliquity);
 	string top = getOtherOrientation(bottom);
 	string right = getOtherOrientation(left);
-	
+
 	MPROrientation mprOrientor(top, left, bottom, right);
 	mprOrientor.processOrientations();
 
@@ -193,154 +184,68 @@ void ReorientSliceToStdOrientation(vtkSmartPointer<vtkTransform> tr, vtkSmartPoi
 		tr->RotateY(angles[1]);
 	if (angles[0] != 0)
 		tr->RotateX(angles[0]);
-
-	RAD_LOG_CRITICAL("Not using:"<<axis << " -- L,R,T,B:" << left << "," << right << "," << top << "," << bottom);
 }
 
-void MPRSlicer::InitSlicer()
-{
-
-}
-
-void MPRSlicer::InitSlicer(vtkSmartPointer<DCMGeometry> DCMGeometry, MPRTransform* mpr_transform)
-{
-	// set up reslice.
-	this->m_reslice = vtkSmartPointer<vtkImageReslice>::New();
-
-
-
-	this->m_transform = vtkSmartPointer<vtkTransform>::New();
-	if (mpr_transform != NULL)
-	{
-		this->m_transform->SetInput(mpr_transform->transform());
-	}
-	this->m_transform->Identity();
-	switch (this->m_axis)
-	{
-		case AxialAxis:
-		{
-			vtkSmartPointer<vtkMatrix4x4> outMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
-			outMatrix->DeepCopy(axialElements);
-			m_transform->Concatenate(outMatrix);
-			//m_transform->Concatenate(p_orientationMatrix);
-			//ReorientSliceToStdOrientation(m_transform, p_orientationMatrix,this->m_axis);
-			//m_transform->GetMatrix()->DeepCopy(axialElements);
-		}
-			break;
-		case SagittalAxis:
-		{
-
-			vtkSmartPointer<vtkMatrix4x4> outMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
-			outMatrix->DeepCopy(sagittalElements);
-
-			m_transform->Concatenate(outMatrix);
-			//m_transform->Concatenate(p_orientationMatrix);
-
-			//m_transform->RotateY(90);
-			//ReorientSliceToStdOrientation(m_transform, p_orientationMatrix,this->m_axis);
-			//m_transform->GetMatrix()->DeepCopy(sagittalElements);
-		}
-			break;
-		case CoronalAxis:
-		{
-			vtkSmartPointer<vtkMatrix4x4> outMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
-			outMatrix->DeepCopy(coronalElements);
-			m_transform->Concatenate(outMatrix);
-			//m_transform->Concatenate(p_orientationMatrix);
-			//m_transform->RotateX(90);
-			//ReorientSliceToStdOrientation(m_transform, p_orientationMatrix, this->m_axis);
-			//m_transform->GetMatrix()->DeepCopy(coronalElements);
-
-		}
-			break;
-	}
-	m_transform->Update();
-	m_transform->Print(cerr);
-	double angle[3] = { 0, 0, 0 };
-	m_transform->GetOrientation(angle);
-	RAD_LOG_CRITICAL("Angle:" << angle[0] << ":" << angle[1] << ":" << angle[2]);
-	this->m_reslice->SetResliceAxes(m_transform->GetMatrix());
-	this->m_reslice->SetInterpolationModeToLinear();
-	this->m_reslice->SetOutputDimensionality(2);
-	this->m_reslice->SetOutputSpacing(this->m_spacing);
-
-	this->m_inputImage->GetOrigin(m_origin);
-
-	this->ComputeOrientationMarkers();
-
-}
 void MPRSlicer::InitSlicer(vtkSmartPointer<vtkMatrix4x4> p_orientationMatrix, MPRTransform* mpr_transform)
 {
 	// set up reslice.
 	this->m_reslice = vtkSmartPointer<vtkImageReslice>::New();
 
-
+	this->m_resliceMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
+	this->m_resliceMatrix->Identity();
 
 	this->m_transform = vtkSmartPointer<vtkTransform>::New();
-	if (mpr_transform != NULL)
-	{
-		this->m_transform->SetInput(mpr_transform->transform());
-	}
+	this->m_transform->SetInput(mpr_transform->transform());
 	this->m_transform->Identity();
 	switch (this->m_axis)
 	{
 		case AxialAxis:
-		{
-			vtkSmartPointer<vtkMatrix4x4> outMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
-			outMatrix->DeepCopy(axialElements);
-			m_transform->Concatenate(outMatrix);
-			//m_transform->Concatenate(p_orientationMatrix);
-			//ReorientSliceToStdOrientation(m_transform, p_orientationMatrix,this->m_axis);
-			//m_transform->GetMatrix()->DeepCopy(axialElements);
-		}
 			break;
 		case SagittalAxis:
 		{
-
-			vtkSmartPointer<vtkMatrix4x4> outMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
-			outMatrix->DeepCopy(sagittalElements);
-			
-			m_transform->Concatenate(outMatrix);
-			//m_transform->Concatenate(p_orientationMatrix);
-			
-			//m_transform->RotateY(90);
-			//ReorientSliceToStdOrientation(m_transform, p_orientationMatrix,this->m_axis);
-			//m_transform->GetMatrix()->DeepCopy(sagittalElements);
+			m_transform->RotateY(90);
+			ReorientSliceToStdOrientation(m_transform, p_orientationMatrix);
 		}
 			break;
 		case CoronalAxis:
 		{
-			vtkSmartPointer<vtkMatrix4x4> outMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
-			outMatrix->DeepCopy(coronalElements);
-			m_transform->Concatenate(outMatrix);
-			//m_transform->Concatenate(p_orientationMatrix);
-			//m_transform->RotateX(90);
-			//ReorientSliceToStdOrientation(m_transform, p_orientationMatrix, this->m_axis);
-			//m_transform->GetMatrix()->DeepCopy(coronalElements);
-
+			m_transform->RotateX(90);
+			ReorientSliceToStdOrientation(m_transform, p_orientationMatrix);
 		}
 			break;
+
+
 	}
-	m_transform->Update();
-	double angle[3] = { 0, 0, 0 };
-	m_transform->GetOrientation(angle);
-	RAD_LOG_CRITICAL("Angle:" << angle[0] << ":" << angle[1] << ":" << angle[2]);
+
 	this->m_reslice->SetResliceAxes(m_transform->GetMatrix());
-	this->m_reslice->SetInterpolationModeToLinear();
+	this->m_reslice->SetInterpolationModeToCubic();
 	this->m_reslice->SetOutputDimensionality(2);
 	this->m_reslice->SetOutputSpacing(this->m_spacing);
-
+	
 	this->m_inputImage->GetOrigin(m_origin);
-
+	/*switch (this->m_axis)
+	{
+		case AxialAxis:
+			this->m_position = m_origin[2];
+			break;
+		case CoronalAxis:
+			this->m_position = m_origin[1];
+			break;
+		case SagittalAxis:
+			this->m_position = m_origin[0];
+			break;
+		default:
+			break;
+	}
+	this->SetReslicePosition(m_origin);*/
 	this->ComputeOrientationMarkers();
 }
 void MPRSlicer::SetReslicePosition(double point[3])
 {
-	this->m_transform->Translate(point);
-	//this->m_transform->GetMatrix()->SetElement(0, 3, point[0]);
-	//this->m_transform->GetMatrix()->SetElement(1, 3, point[1]);
-	//this->m_transform->GetMatrix()->SetElement(2, 3, point[2]);
-//	this->m_transform->Update();
+	/*this->m_resliceMatrix->SetElement(0, 3, point[0]);
+	this->m_resliceMatrix->SetElement(1, 3, point[1]);
+	this->m_resliceMatrix->SetElement(2, 3, point[2]);
+	this->m_resliceMatrix->Modified();*/
 }
 
 image MPRSlicer::GetOutputImage()
@@ -501,7 +406,7 @@ double MPRSlicer::GetSlicerPosition()
 	switch (this->m_axis)
 	{
 		case AxialAxis:
-			pos = this->m_transform->GetMatrix()->GetElement(2, 3) + 1;
+			pos = this->m_transform->GetMatrix()->GetElement(2, 3);
 			break;
 		case CoronalAxis:
 			pos = this->m_transform->GetMatrix()->GetElement(1, 3);
@@ -554,30 +459,26 @@ double MPRSlicer::GetSlicerPosition()
 string CalucateOrientation(double vectorX, double vectorY, double vectorZ)
 {
 	string orientation = "";
-	string orientationX = vectorX < 0 ? "R" : "L";
-	string orientationY = vectorY < 0 ? "A" : "P";
-	string orientationZ = vectorZ < 0 ? "I" : "S";
+	string orientationX = vectorX <= (double)0 ? "R" : "L";
+	string orientationY = vectorY <= (double)0 ? "A" : "P";
+	string orientationZ = vectorZ <= (double)0 ? "I" : "S";
 
 
-	double absX = fabs(vectorX);
-	double absY = fabs(vectorY);
-	double absZ = fabs(vectorZ);
+	double absX = abs(vectorX);
+	double absY = abs(vectorY);
+	double absZ = abs(vectorZ);
 
-	double obliquity = 0.0001;
-	for (int i = 0; i<3; ++i) 
-	{
-		if (absX>obliquity && absX >= absY && absX >= absZ) 
-		{
+	double obliquity = 0.50;
+	for (int i = 0; i<3; ++i) {
+		if (absX>obliquity && absX >= absY && absX >= absZ) {
 			orientation.append(orientationX);
 			absX = 0;
 		}
-		else if (absY>obliquity && absY >= absX && absY >= absZ) 
-		{
+		else if (absY>obliquity && absY >= absX && absY >= absZ) {
 			orientation.append(orientationY);
 			absY = 0;
 		}
-		else if (absZ>obliquity && absZ >= absX && absZ >= absY) 
-		{
+		else if (absZ>obliquity && absZ >= absX && absZ >= absY) {
 			orientation.append(orientationZ);
 			absZ = 0;
 		}
@@ -620,26 +521,15 @@ string GetOtherOrientation(string oneOrientation)
 }
 void MPRSlicer::ComputeOrientationMarkers()
 {
-	
-	double e[16] =
-	{
-		0, 0, 0, 0,
-		0, 0, 0, 0,
-		0, 0, 0, 0,
-		0, 0, 0, 0
-	};
-	this->m_transform->GetMatrix()->DeepCopy(e);
-	double x[3] = { e[0], e[1], e[2] };
-	double y[3] = { e[4], e[5], e[6] };
-	double z[3] = { e[8], e[9], e[10] };
-	RAD_LOG_CRITICAL("X:" << x[0] << ":" << x[1] << ":" << x[2]);
-	RAD_LOG_CRITICAL("Y:" << y[0] << ":" << y[1] << ":" << y[2]);
+	double x[3] = { 0, 0, 0 };
+	double y[3] = { 0, 0, 0 };
+	double z[3] = { 0, 0, 0 };
+	this->m_reslice->GetResliceAxesDirectionCosines(x, y, z);
+
 	this->m_orientatationMarkers_L = CalucateOrientation(x[0], x[1], x[2]);
 	this->m_orientatationMarkers_R = GetOtherOrientation(this->m_orientatationMarkers_L);
 	this->m_orientatationMarkers_B = CalucateOrientation(y[0], y[1], y[2]);
 	this->m_orientatationMarkers_T = GetOtherOrientation(this->m_orientatationMarkers_B);
-
-	RAD_LOG_CRITICAL("Using: "<<m_axis << " -- L,R,T,B:" << m_orientatationMarkers_L << "," << m_orientatationMarkers_R << "," << m_orientatationMarkers_T << "," << m_orientatationMarkers_B);
 }
 
 vtkSmartPointer<vtkImageData> MPRSlicer::GetRawOutputImage()
@@ -648,12 +538,11 @@ vtkSmartPointer<vtkImageData> MPRSlicer::GetRawOutputImage()
 	this->m_reslice->SetInputData(this->m_inputImage);
 	this->m_reslice->SetOutputDimensionality(2);
 
-#ifdef LINEAR_INTERPOLATION
-	this->m_reslice->SetInterpolationModeToLinear();
-#else
 	this->m_reslice->SetInterpolationModeToCubic();
-#endif
 	this->m_reslice->Update();
+
+	int inDim[3] = { 0, 0, 0 };
+	this->m_inputImage->GetDimensions(inDim);
 
 	this->m_outputImage = this->m_reslice->GetOutput();
 	return this->m_outputImage;
