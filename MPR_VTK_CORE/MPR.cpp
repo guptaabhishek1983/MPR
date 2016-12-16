@@ -848,12 +848,12 @@ void MPR::RotateAxesAlongPlane(int axis, int angle)
 		case AxialAxis:
 		{
 			// rotate sagittal
-			d->m_cursorTransform->RotateX(angle);
+			//d->m_cursorTransform->RotateX(angle);
 			//rotate coronal
-			d->m_cursorTransform->RotateY(angle);
+			//d->m_cursorTransform->RotateY(angle);
 
-			//d->m_slicers[SagittalAxis]->GetTransform()->RotateX(angle);
-			//d->m_slicers[CoronalAxis]->GetTransform()->RotateY(angle);
+			d->m_slicers[SagittalAxis]->GetTransform()->RotateX(angle);
+			d->m_slicers[CoronalAxis]->GetTransform()->RotateY(angle);
 			//d->m_cursorTransform->RotateX(angle);
 			//d->m_cursorTransform->RotateZ(angle);
 		}
